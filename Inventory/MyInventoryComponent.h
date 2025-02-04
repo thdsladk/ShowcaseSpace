@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
+
 #include "MyInventoryComponent.generated.h"
 
 // define 
@@ -11,8 +12,12 @@
 
 
 DECLARE_MULTICAST_DELEGATE(FOnUpdateWidget);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnUpdateSlotWidget,int32);
+
 // 하나의 함수만 바인딩 하기위하여...
 DECLARE_DELEGATE_TwoParams(FOnSwapWidget,int32,int32);
+
+class AMyItem;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MYTEST_TOPDOWN_API UMyInventoryComponent : public UActorComponent
@@ -33,9 +38,9 @@ public:
 	FString GetItemName(int32 Index);
 
 	// 아이템 조작 부분 
-	bool PushBackItem(class AMyItem* Item, int32 Index);
-	class AMyItem* PopBackItem(int32 Index);
+	AMyItem* PopBackItem(int32 Index);
 
+	bool TakeItem(AMyItem* Item, int32 Index);
 	TArray<int32> UseItem(int32 Index);
 	void DropItem(int32 Index,FVector Pos);
 	int32 FindAddIndex(int32 ID);
@@ -49,11 +54,12 @@ public:
 	int32 GetInventorySize();
 
 public:
-	FOnUpdateWidget m_UpdateWidget;	// 인벤토리 위젯이랑 바인딩하자
+	FOnUpdateWidget m_UpdateWidget;				// 인벤토리 위젯이랑 바인딩하자
+	FOnUpdateSlotWidget m_UpdateSlotWidget;		
 	FOnSwapWidget m_SwapWidget;		// 교환 전용 델리게이트[ 싱글 델리게이트 ] 
 protected:
 
-	TArray<TArray<class AMyItem*>> m_Inventory;
+	TArray<TArray<AMyItem*>> m_Inventory;
 	int32 m_RefEquipment[5]{ EmptyIndex,EmptyIndex,EmptyIndex,EmptyIndex,EmptyIndex };
 
 	const uint32 m_Row = 5U;

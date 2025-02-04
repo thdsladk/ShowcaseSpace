@@ -50,7 +50,7 @@ FString UMyInventoryComponent::GetItemName(int32 Index)
 	return m_Inventory[Index].Top()->GetName();
 }
 
-bool UMyInventoryComponent::PushBackItem(AMyItem* Item, int32 Index)
+bool UMyInventoryComponent::TakeItem(AMyItem* Item, int32 Index)
 {
 	if (m_Inventory[Index].IsEmpty() == true)
 	{
@@ -95,23 +95,11 @@ TArray<int32> UMyInventoryComponent::UseItem(int32 Index)
 		if (ItemType != EItemEffectType::None)	// None이면 Usable 아이템이 아니다.
 		{
 			PopBackItem(Index);
-
-
-			// 주의 ... 여기서 게임모드랑 인벤토리 위젯을 캐스팅해서 써도 되는가 ??? [ 오로지 위젯 업데이트를 위해서 ]
-			AMyTest_TopDownGameMode* GameMode = Cast<AMyTest_TopDownGameMode>(GetWorld()->GetAuthGameMode());
-			if (GameMode != nullptr)
-			{
-				UMyInventoryWidget* CurrentWidget = Cast<UMyInventoryWidget>(GameMode->GetCurrentWidget());
-				if (CurrentWidget != nullptr)
-				{
-					CurrentWidget->UpdateWidget_Slot(Index);
-				}
-			
-			}
 		}
 		// Widget Update  : 여기서 전부 갱신해줄지 아니면 Index를 받아서 해당 해당 슬롯만 갱신해줄지 정하면 좋을듯
 		//					임시로 인벤토리 위젯을 갱신한다.
-		m_UpdateWidget.Broadcast();
+		//m_UpdateWidget.Broadcast();
+		m_UpdateSlotWidget.Broadcast(Index);
 
 		//ItemType
 		return TArray<int32>{ItemType, ItemTime, ItemIntensity};
@@ -126,7 +114,6 @@ TArray<int32> UMyInventoryComponent::UseItem(int32 Index)
 
 void UMyInventoryComponent::DropItem(int32 Index, FVector Pos)
 {
-
 	for (auto Elem : m_Inventory[Index])
 	{
 		Elem->Replace(Pos);

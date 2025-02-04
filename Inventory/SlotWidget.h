@@ -6,6 +6,7 @@
 #include "Blueprint/UserWidget.h"
 #include "SlotWidget.generated.h"
 
+class UMyInventoryComponent;
 /**
  * 
  */
@@ -28,9 +29,10 @@ class MYTEST_TOPDOWN_API USlotWidget : public UUserWidget
 {
 	GENERATED_BODY()
 public:
+	virtual bool Initialize() override;
 	virtual void NativeConstruct() override;
-	void Init();
 
+	void BindInventory(UMyInventoryComponent* InventoryComp);
 
 	UFUNCTION()
 	void UpdateWidget();
@@ -73,5 +75,5 @@ protected:
 
 	//Reference
 	UPROPERTY()
-	TWeakObjectPtr<class UMyInventoryComponent> m_InventoryComp;
+	TWeakObjectPtr<UMyInventoryComponent> m_InventoryComp;
 };

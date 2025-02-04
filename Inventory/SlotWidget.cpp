@@ -13,24 +13,29 @@
 #include "Blueprint/WidgetBlueprintLibrary.h"
 
 #include "Character/MyTest_TopDownPlayerController.h"
+#include "MyInventoryWidget.h"
+#include "InventoryInterface.h"
+
+
+bool USlotWidget::Initialize()
+{
+    bool Result = Super::Initialize();
 
 
 
+    return Result;
+}
 
 void USlotWidget::NativeConstruct()
 {
     Super::NativeConstruct();
 
+
 }
 
-void USlotWidget::Init()
+void USlotWidget::BindInventory(UMyInventoryComponent* InventoryComp)
 {
-    AMyTest_TopDownCharacter* MyCharacter = Cast<AMyTest_TopDownCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
-    if (MyCharacter != nullptr && MyCharacter->GetInventory() != nullptr)
-    {
-        m_InventoryComp = MyCharacter->GetInventory();
-    }
-
+    m_InventoryComp = InventoryComp;
 }
 
 void USlotWidget::UpdateWidget()
@@ -169,10 +174,10 @@ FReply USlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
         else if (m_SlotType == ESlotType::ItemSlot)
         {
             // 아이템 슬롯을 인벤토리에서 벗어나게 하자.
-            AMyTest_TopDownCharacter* MyCharacter = Cast<AMyTest_TopDownCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
-            if (MyCharacter != nullptr)
+            APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+            if (Pawn != nullptr)
             {
-                MyCharacter->DropItem(m_SlotIndex, {MyCharacter->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0)});
+                CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, {Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0)});
                 UpdateWidget();
             }
         }
@@ -199,10 +204,10 @@ FReply USlotWidget::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, 
         else if (m_SlotType == ESlotType::ItemSlot)
         {
             // 슬롯의 왼쪽을 더블클릭하면 캐릭터가 ItemSlot을 사용 하도록 .
-            AMyTest_TopDownCharacter* MyCharacter = Cast<AMyTest_TopDownCharacter>(GetWorld()->GetFirstPlayerController()->GetPawn());
-            if (MyCharacter != nullptr)
+            APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+            if (Pawn != nullptr)
             {
-                MyCharacter->UseItem(m_SlotIndex);
+                CastChecked<IInventoryInterface>(Pawn)->UseItem(m_SlotIndex);
             }
         }
         //Debug
