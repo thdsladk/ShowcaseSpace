@@ -11,7 +11,7 @@
 /** Forward declaration to improve compiling times */
 class UNiagaraSystem;
 DECLARE_MULTICAST_DELEGATE(FOnInvetory);
-
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHUDUpdate, uint8);
 
 
 UCLASS()
@@ -22,7 +22,7 @@ public:
 	/// <summary>
 	/// 순서가 중요. ordered
 	/// </summary>
-	enum EKey : int8
+	enum EKey : uint8
 	{
 		Key_Q,
 		Key_W,
@@ -37,8 +37,31 @@ public:
 		Key_End
 
 	};
+
+	enum EHUDState : uint8
+	{
+		EIngame,
+		EInventory,
+		EShop,
+		EStatus,
+		ESkill,
+		EEnd
+	};
+
 public:
 	AMyTest_TopDownPlayerController();
+
+
+	UUserWidget* GetCurrentWidget() { return m_CurrentWidget; }
+	uint8 GetHUDState() { return m_HUDState; }
+	void ApplyHUDChange();
+
+	UFUNCTION(BlueprintCallable, Category = "HUD_Functions")
+		void ChangeHUDState(uint8 State);
+
+	bool ApplyHUD(TSubclassOf<UUserWidget> Widget, bool bShowMouse, bool EnableClickEvent);
+
+	FOnHUDUpdate OnHUDUpdate;
 
 	/** Time Threshold to know if it was a short press */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input)
@@ -52,25 +75,24 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
 	class UInputMappingContext* DefaultMappingContext;
 	
-	/** Left Click Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* SetDestinationLClickAction;
 
-	/** Right Click Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	class UInputAction* SetDestinationRClickAction;
-
-	/** Touch Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category=Input, meta=(AllowPrivateAccess = "true"))
-	class UInputAction* SetDestinationTouchAction;
-
-	/**  Key Input Action */
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TMap<FKey, class UInputAction*> SetDestinationKeyAction;
-	//TArray<class UInputAction*> SetDestinationKeyAction;
 
 public:
 	FOnInvetory Inventory_Notify;
+
+public:
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "OnScoreChangedCpp"))
+		void K2_OnScoreChanged(int32 NewScore);
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "OnGameClearCpp"))
+		void K2_OnGameClear();
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "OnGameOverCpp"))
+		void K2_OnGameOver();
+	UFUNCTION(BlueprintImplementableEvent, Category = Game, Meta = (DisplayName = "OnGameRetryCountCpp"))
+		void K2_OnGameRetryCount(int32 NewRetryCount);
+
+	void GameScoreChanged(int32 NewScore);
+	void GameClear();
+	void GameOver();
 
 protected:
 	/** True if the controlled character should navigate to the mouse cursor. */
@@ -113,11 +135,41 @@ private:
 	bool bIsTouch; // Is it a touch device
 	float FollowTime; // For how long it has been pressed
 
-	int8 m_UsedKeyNum = Key_End;
+	uint8 m_UsedKeyNum = Key_End;
 
 protected:
 
+	// HUD Section
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
+	TSubclassOf<UUserWidget> HUD_Class;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
+	TSubclassOf<UUserWidget> m_InventoryWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
+	TSubclassOf<UUserWidget> m_ShopWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
+	TSubclassOf<UUserWidget> m_StatusWidget;
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
+	TObjectPtr<UUserWidget> m_CurrentWidget;
 
+	uint8 m_HUDState = 0;
+
+	// Key Action
+	/** Left Click Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SetDestinationLClickAction;
+
+	/** Right Click Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SetDestinationRClickAction;
+
+	/** Touch Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	class UInputAction* SetDestinationTouchAction;
+
+	/**  Key Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	TMap<FKey, class UInputAction*> SetDestinationKeyAction;
+	//TArray<class UInputAction*> SetDestinationKeyAction;
 };
 
 

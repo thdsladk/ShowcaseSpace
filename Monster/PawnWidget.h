@@ -14,12 +14,12 @@ class MYTEST_TOPDOWN_API UPawnWidget : public UMyUserWidget
 {
 	GENERATED_BODY()
 public:
-	void BindHp(class UMonsterStatComponent* StatComp);
+	void BindHp(class UMyStatComponent* StatComp);
 
 	void UpdateHp();
 
 private:
-	TWeakObjectPtr<class UMonsterStatComponent> CurrentStatComp;
+	TWeakObjectPtr<class UMyStatComponent> CurrentStatComp;
 
 	UPROPERTY(meta = (BindWidget))
 	class UProgressBar* PB_HpBar;

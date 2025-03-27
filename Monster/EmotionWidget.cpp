@@ -28,19 +28,27 @@ void UEmotionWidget::UpdateWidget()
 {
 }
 
-void UEmotionWidget::StartEmotion(float Time)
+void UEmotionWidget::StartEmotion(UTexture2D* Icon, float Time)
 {
+
 	// Just First
 	if (m_LifeCount == 0)
-	{ 
+	{
+		// TO DO 이미지를 변경해야한다 .
+
+		FSlateBrush IconBrush;
+		IconBrush.SetResourceObject(Icon);
+		//IconBrush.ImageSize = FVector2D(Icon->GetSizeX(), Icon->GetSizeY());
+		Emotion->SetBrush(IconBrush);
+
 		Background->SetVisibility(ESlateVisibility::Visible);
 		Emotion->SetVisibility(ESlateVisibility::Visible);
-		m_LifeCount = static_cast<int32>(Time*2.f);
-	
-		// TO DO 이미지를 변경해야한다 .
-		//Emotion->Set
+		m_LifeCount = static_cast<int32>(Time * 2.f);
+
 	}
 	GetWorld()->GetTimerManager().SetTimer(m_hLifeCycle, this, &UEmotionWidget::EndEmotion, 0.5f, true);
+
+
 
 }
 

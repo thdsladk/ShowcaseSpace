@@ -1,0 +1,9 @@
+---,RadiusType,Icon
+0,"Melee","/Script/Engine.Texture2D'/Engine/EditorMaterials/Cascade/CASC_Lights.CASC_Lights'"
+1,"Melee","/Script/Engine.Texture2D'/Game/TopDown/Icons/Skill/Icon_Skill_Sword_Swing.Icon_Skill_Sword_Swing'"
+2,"Melee","/Script/Engine.Texture2D'/Game/TopDown/Icons/Skill/Icon_Skill_Sword_Smash.Icon_Skill_Sword_Smash'"
+3,"Melee","/Script/Engine.Texture2D'/Game/TopDown/Icons/Skill/Icon_Skill_Sword_Defence.Icon_Skill_Sword_Defence'"
+4,"Melee","/Script/Engine.Texture2D'/Game/ParagonGrux/Characters/Global/Eyes/Textures/EYE_NORMALS.EYE_NORMALS'"
+5,"Melee","/Script/Engine.Texture2D'/Engine/EngineResources/AICON-Red.AICON-Red'"
+6,"Melee","/Script/Engine.Texture2D'/Engine/EngineResources/AICON-Green.AICON-Green'"
+7,"Melee","/Script/Engine.Texture2D'/Engine/EditorResources/Ai_Spawnpoint.Ai_Spawnpoint'"

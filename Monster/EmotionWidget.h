@@ -22,7 +22,7 @@ public:
 	UFUNCTION()
 	void UpdateWidget();
 
-	void StartEmotion(float Time);
+	void StartEmotion(UTexture2D* Icon, float Time);
 	void EndEmotion();
 
 private:

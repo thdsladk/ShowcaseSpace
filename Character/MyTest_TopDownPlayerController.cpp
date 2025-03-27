@@ -8,16 +8,18 @@
 #include "Engine/World.h"
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
+#include "Components/WidgetComponent.h"
+#include "EnhancedInputComponent.h"
 
+#include "MyTest_TopDownGameMode.h"
 #include "MyTest_TopDownCharacter.h"
 #include "SkillComponent.h"
 
-#include "Components/WidgetComponent.h"
+
+#include "MyHUD.h"
 #include "MyInventoryWidget.h"
 #include "StatWidget.h"
-#include "EnhancedInputComponent.h"
-#include "MyTest_TopDownGameMode.h"
-#include "MyHUD.h"
+
 
 AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
 {
@@ -41,6 +43,110 @@ AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
 	SetDestinationKeyAction.Add(EKeys::SpaceBar, nullptr);
 	SetDestinationKeyAction.Add(EKeys::LeftShift, nullptr);
 	
+	// HUD 
+	static ConstructorHelpers::FClassFinder<UMyHUD> UI_HUD(TEXT("/Game/TopDown/UI/BP_MyHUD.BP_MyHUD_C"));
+	if (UI_HUD.Succeeded())
+	{
+		HUD_Class = UI_HUD.Class;
+
+		// Create the widget instance.
+		m_CurrentWidget = CreateWidget(GetWorld(), HUD_Class);
+		if (m_CurrentWidget)
+		{
+			// Add the widget to the viewport so that it becomes visible on the screen.
+			m_CurrentWidget->AddToViewport();
+		}
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Fail HUD"));
+	}
+
+	static ConstructorHelpers::FClassFinder<UMyInventoryWidget> Inventory_HUD(TEXT("/Game/TopDown/UI/Inventory/WBP_MyInventoryWidget.WBP_MyInventoryWidget_C"));
+	if (Inventory_HUD.Succeeded())
+	{
+		m_InventoryWidget = Inventory_HUD.Class;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Fail Inventory HUD"));
+	}
+
+	static ConstructorHelpers::FClassFinder<UStatWidget> Status_HUD(TEXT("/Game/TopDown/UI/BP_StatHUD.BP_StatHUD_C"));
+	if (Status_HUD.Succeeded())
+	{
+		m_StatusWidget = Status_HUD.Class;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Log, TEXT("Fail Status HUD"));
+	}
+
+}
+
+void AMyTest_TopDownPlayerController::ApplyHUDChange()
+{
+	if (m_CurrentWidget != nullptr)
+	{
+		m_CurrentWidget->RemoveFromParent();
+	}
+
+	switch (m_HUDState)
+	{
+	case EHUDState::EIngame:
+	{
+		ApplyHUD(HUD_Class, true, true);
+		break;
+	}
+	case EHUDState::EInventory:
+	{
+		ApplyHUD(m_InventoryWidget, true, true);
+		break;
+	}
+	case EHUDState::EShop:
+	{
+		ApplyHUD(m_ShopWidget, true, true);
+		break;
+	}
+	case EHUDState::EStatus:
+	{
+		ApplyHUD(m_StatusWidget, true, true);
+		break;
+	}
+	case EHUDState::ESkill:
+	{
+		ApplyHUD(HUD_Class, true, true);
+		break;
+	}
+	default:
+		break;
+	}
+}
+
+void AMyTest_TopDownPlayerController::ChangeHUDState(uint8 State)
+{
+	m_HUDState = State;
+	ApplyHUDChange();
+}
+
+bool AMyTest_TopDownPlayerController::ApplyHUD(TSubclassOf<UUserWidget> Widget, bool bShowMouse, bool EnableClickEvent)
+{
+	//AMyTest_TopDownCharacter* Character = Cast<AMyTest_TopDownCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
+	bShowMouseCursor = bShowMouse;
+	bEnableClickEvents = EnableClickEvent;
+
+	m_CurrentWidget = CreateWidget<UUserWidget>(GetWorld(), Widget);
+
+	if (m_CurrentWidget != nullptr)
+	{
+		m_CurrentWidget->AddToViewport();
+		// Widget이 변경 될때마다 알리자 . 
+		OnHUDUpdate.Broadcast(m_HUDState);
+
+		return true;
+	}
+
+	return false;
 }
 
 void AMyTest_TopDownPlayerController::BeginPlay()
@@ -97,8 +203,7 @@ void AMyTest_TopDownPlayerController::SetupInputComponent()
 	}
 
 	//Inventory_Notify.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Tab);
-	AMyTest_TopDownGameMode* GameMode = CastChecked<AMyTest_TopDownGameMode>(GetWorld()->GetAuthGameMode());
-	CastChecked<UMyHUD>(GameMode->GetCurrentWidget())->m_OnInven.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Tab);
+	CastChecked<UMyHUD>(m_CurrentWidget)->m_OnInven.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Tab);
 }
 
 void AMyTest_TopDownPlayerController::OnInputStarted()
@@ -173,21 +278,20 @@ void AMyTest_TopDownPlayerController::ClickRMouse()
 
 void AMyTest_TopDownPlayerController::Click_Tab()
 {
-	AMyTest_TopDownGameMode* GameMode = CastChecked<AMyTest_TopDownGameMode>(GetWorld()->GetAuthGameMode());
 
-	if (GameMode->GetHUDState() == AMyTest_TopDownGameMode::EState::EInventory) // 인벤토리가 열려 있으면 
+	if (m_HUDState == AMyTest_TopDownPlayerController::EHUDState::EInventory) // 인벤토리가 열려 있으면 
 	{
-		GameMode->ChangeHUDState(AMyTest_TopDownGameMode::EState::EIngame);
+		ChangeHUDState(AMyTest_TopDownPlayerController::EHUDState::EIngame);
 		SetPause(false);
 		
 	}
 	else						  // 인벤토리가 닫혀 있으면
 	{
-		GameMode->ChangeHUDState(AMyTest_TopDownGameMode::EState::EInventory);
+		ChangeHUDState(AMyTest_TopDownPlayerController::EHUDState::EInventory);
 		SetPause(true);
 		
 		// InventoryWidget Update Call 
-		UMyInventoryWidget* InventoryWidget = CastChecked<UMyInventoryWidget>(GameMode->GetCurrentWidget());
+		UMyInventoryWidget* InventoryWidget = CastChecked<UMyInventoryWidget>(m_CurrentWidget);
 		if (InventoryWidget)
 		{
 			InventoryWidget->UpdateWidget();
@@ -206,17 +310,15 @@ void AMyTest_TopDownPlayerController::Click_F()
 
 void AMyTest_TopDownPlayerController::Click_P()
 {
-	AMyTest_TopDownGameMode* GameMode = CastChecked<AMyTest_TopDownGameMode>(GetWorld()->GetAuthGameMode());
-	
-	if (GameMode->GetHUDState() == AMyTest_TopDownGameMode::EState::EStatus) // 상태창이 열려 있으면 
+	if (m_HUDState == AMyTest_TopDownPlayerController::EHUDState::EStatus) // 상태창이 열려 있으면 
 	{
-		GameMode->ChangeHUDState(AMyTest_TopDownGameMode::EState::EIngame);
+		ChangeHUDState(AMyTest_TopDownPlayerController::EHUDState::EIngame);
 		SetPause(false);
 
 	}
 	else						  // 상태창이 닫혀 있으면
 	{
-		GameMode->ChangeHUDState(AMyTest_TopDownGameMode::EState::EStatus);
+		ChangeHUDState(AMyTest_TopDownPlayerController::EHUDState::EStatus);
 		SetPause(true);
 
 		// InventoryWidget Update Call 
@@ -283,4 +385,19 @@ void AMyTest_TopDownPlayerController::Release_Shift()
 {
 	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
 	MyCharacter->StopSprint();
+}
+
+void AMyTest_TopDownPlayerController::GameScoreChanged(int32 NewScore)
+{
+	K2_OnGameRetryCount(NewScore);
+}
+
+void AMyTest_TopDownPlayerController::GameClear()
+{
+	K2_OnGameClear();
+}
+
+void AMyTest_TopDownPlayerController::GameOver()
+{
+	K2_OnGameOver();
 }

@@ -6,7 +6,7 @@
 #include "Components/ProgressBar.h"
 
 
-void UPawnWidget::BindHp(class UMonsterStatComponent* StatComp)
+void UPawnWidget::BindHp(class UMyStatComponent* StatComp)
 {
 	//PB_HpBar123 = Cast<UProgressBar>(GetWidgetFromName(TEXT("PB_HpBar"));
 	CurrentStatComp = StatComp;
