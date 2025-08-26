@@ -6,6 +6,9 @@
 #include "UI/MyUserWidget.h"
 #include "PawnWidget.generated.h"
 
+class UMyStatComponent;
+class UProgressBar;
+
 /**
  * 
  */
@@ -14,13 +17,16 @@ class MYTEST_TOPDOWN_API UPawnWidget : public UMyUserWidget
 {
 	GENERATED_BODY()
 public:
-	void BindHp(class UMyStatComponent* StatComp);
+	void BindHp(UMyStatComponent* StatComp);
 
-	void UpdateHp();
+	void UpdateHp(float Hp_Ratio);
+	void UpdateAggroGauge(uint8 Gauge);
 
 private:
-	TWeakObjectPtr<class UMyStatComponent> CurrentStatComp;
 
 	UPROPERTY(meta = (BindWidget))
-	class UProgressBar* PB_HpBar;
+	UProgressBar* PB_HpBar;
+	UPROPERTY(meta = (BindWidget))
+	UProgressBar* PB_AggroBar;
+
 };

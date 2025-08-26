@@ -28,3 +28,28 @@ enum class EBehaviorState : uint8
 	End				UMETA(DisplayName = "End")
 
 };
+
+UENUM(BlueprintType)
+enum class ECharacterMode : uint8
+{
+	Idle	UMETA(DisplayName = "Idle"),
+	Detect	UMETA(DisplayName = "Detect"),
+	Battle	UMETA(DisplayName = "Battle"),
+	StopAI	UMETA(DisplayName = "StopAI"),
+	End		UMETA(DisplayName = "End")
+};
+
+UENUM(BlueprintType)
+enum class EBattleCommand : uint8
+{
+	Null				UMETA(DisplayName = "Null"),
+	Attack				UMETA(DisplayName = "Attack"),
+	SmashAttack			UMETA(DisplayName = "SmashAttack"),
+	Defense				UMETA(DisplayName = "Defense"),
+	Cast				UMETA(DisplayName = "Cast"),
+	Shout				UMETA(DisplayName = "Shout"),
+	FallBack			UMETA(DisplayName = "FallBack"),
+	Escape				UMETA(DisplayName = "Escape"),
+	End					UMETA(DisplayName = "End"),
+	Size = End
+};

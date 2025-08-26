@@ -6,6 +6,7 @@
 #include "UI/MyUserWidget.h"
 #include "EmotionWidget.generated.h"
 
+class UImage;
 /**
  * 
  */
@@ -20,18 +21,23 @@ public:
 	void DestroyWidget();
 
 	UFUNCTION()
-	void UpdateWidget();
+	void UpdateCommand(uint8 Command);
+	void UpdateCharacterMode(uint8 Mode);
+	void BindFunction(AActor* Owner);
 
-	void StartEmotion(UTexture2D* Icon, float Time);
+	void StartEmotion();
 	void EndEmotion();
+
+	
 
 private:
 	FTimerHandle m_hLifeCycle;
-	int32 m_LifeCount = 0;
 	FVector2D m_Size;
+	uint8 m_IsPlay :1;
+	uint8 m_IsScalingUp : 1;
 
 	UPROPERTY(meta = (BindWidget))
-	class UImage* Background;
+	UImage* Background;
 	UPROPERTY(meta = (BindWidget))
-	class UImage* Emotion;
+	UImage* Emotion;
 };

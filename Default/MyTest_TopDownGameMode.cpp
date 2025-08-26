@@ -2,9 +2,9 @@
 
 #include "MyTest_TopDownGameMode.h"
 #include "MyTest_TopDownPlayerController.h"
-#include "MyTest_TopDownCharacter.h"
 #include "Kismet/GameplayStatics.h"
 #include "UObject/ConstructorHelpers.h"
+#include "Default/MyGameState.h"
 
 
 AMyTest_TopDownGameMode::AMyTest_TopDownGameMode()
@@ -14,7 +14,7 @@ AMyTest_TopDownGameMode::AMyTest_TopDownGameMode()
 	PlayerControllerClass = AMyTest_TopDownPlayerController::StaticClass();
 
 	// set default pawn class to our Blueprinted character
-	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/BP_TopDownCharacter"));
+	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/TopDown/Blueprints/PlayerCharacter/BP_GreyStone.BP_GreyStone_C"));
 	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
@@ -27,6 +27,7 @@ AMyTest_TopDownGameMode::AMyTest_TopDownGameMode()
 		PlayerControllerClass = PlayerControllerBPClass.Class;
 	}
 
+	GameStateClass = AMyGameState::StaticClass();
 }
 
 void AMyTest_TopDownGameMode::OnPlayerScoreChanged(int32 NewPlayerScore)

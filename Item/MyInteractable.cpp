@@ -5,7 +5,7 @@
 #include "Components/BoxComponent.h"
 #include "Components/WidgetComponent.h"
 
-#include "MyTest_TopDownCharacter.h"
+#include "Interface/InteractableInterface.h"
 #include "ItemHelpTip.h"
 #include "Particles/ParticleSystemComponent.h"
 #include "NiagaraSystem.h"
@@ -14,7 +14,7 @@
 
 // Sets default values
 AMyInteractable::AMyInteractable()
-	:m_bInCharacter(false) , m_bVisiable(true)
+	:m_bVisiable(true), m_bInCharacter(false)
 {
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
@@ -33,7 +33,7 @@ AMyInteractable::AMyInteractable()
 	
 
 	
-	m_HelpTextComp->SetupAttachment(m_Trigger);
+	//m_HelpTextComp->SetupAttachment(m_Trigger);
 	m_HelpTextComp->SetRelativeLocation(FVector{ 0.f,0.f,200.f });
 	m_HelpTextComp->SetWidgetSpace(EWidgetSpace::Screen);
 
@@ -54,9 +54,9 @@ AMyInteractable::AMyInteractable()
 
 	// 컴포넌트 구조
 	RootComponent = m_Trigger;
-	m_MeshComp->SetupAttachment(m_Trigger);
-	m_HelpTextComp->SetupAttachment(m_Trigger);
-	m_Effect->SetupAttachment(m_Trigger);
+	m_MeshComp->SetupAttachment(RootComponent);
+	m_HelpTextComp->SetupAttachment(RootComponent);
+	m_Effect->SetupAttachment(RootComponent);
 }
 
 // Called when the game starts or when spawned
@@ -64,6 +64,8 @@ void AMyInteractable::BeginPlay()
 {
 	Super::BeginPlay();
 	
+	// 월드에 생성될때 표시되도록 한다. 
+	ApplyHidden(false);
 }
 
 void AMyInteractable::PostInitializeComponents()
@@ -88,16 +90,17 @@ void AMyInteractable::PostInitializeComponents()
 
 }
 
+#pragma region Collision Function
 void AMyInteractable::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
 {  
 	
-	AMyTest_TopDownCharacter* MyCharacter = Cast<AMyTest_TopDownCharacter>(OtherActor);
-	if (MyCharacter != nullptr)
+	IInteractableInterface* InteractableInterface = Cast<IInteractableInterface>(OtherActor);
+	if (InteractableInterface != nullptr)
 	{
 		//  상호작용 중인 객체가 존재하지 않으면 
-		if (MyCharacter->HasCurrentInteractable() == false)
+		if (InteractableInterface->HasCurrentInteractable() == false)
 		{
-			MyCharacter->SetCurrentInteractable(this);
+			InteractableInterface->SetCurrentInteractable(this);
 			
 			// 캐릭터와 충돌 시작
 			m_bInCharacter = true;
@@ -118,10 +121,10 @@ void AMyInteractable::OnCharacterBeginOverlap(UPrimitiveComponent* OverlappedCom
 void AMyInteractable::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex)
 {
 
-	AMyTest_TopDownCharacter* MyCharacter = Cast<AMyTest_TopDownCharacter>(OtherActor);
-	if (MyCharacter != nullptr)
+	IInteractableInterface* InteractableInterface = Cast<IInteractableInterface>(OtherActor);
+	if (InteractableInterface != nullptr)
 	{
-		MyCharacter->SetCurrentInteractable(nullptr);
+		InteractableInterface->SetCurrentInteractable(nullptr);
 
 		// 캐릭터와 충돌 끝
 		m_bInCharacter = false;
@@ -131,43 +134,84 @@ void AMyInteractable::OnCharacterEndOverlap(UPrimitiveComponent* OverlappedComp,
 	}
 
 }
+#pragma endregion
 
 void AMyInteractable::Init()
 {
 	// ON 상태로 표시. 
 
-	m_bVisiable = true;
+	m_HelpTextComp->SetActive(true);
 
-	//m_HelpTextComp->SetActive(true);
-
-	SetHidden(!m_bVisiable);
+	ApplyHidden(false);
 
 	m_Trigger->SetSimulatePhysics(true);
-	m_Trigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	//m_Trigger->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
+	m_Trigger->SetCollisionProfileName(CPROFILE_ITEMBOX);
 }
 
-void AMyInteractable::Click_F()
+void AMyInteractable::OnInteract()
 {
 	m_Effect->Activate(true);
 }
 
 void AMyInteractable::Interact_Implementation()
 {
+
 }
 
 void AMyInteractable::Replace(FVector Pos)
 {
 	Init();
 	SetActorTransform(FTransform(Pos));
-	m_MeshComp->SetWorldTransform(FTransform(Pos));
-
-
+	if (m_MeshComp->GetStaticMesh() != nullptr)
+	{
+		m_MeshComp->SetWorldTransform(FTransform(Pos));
+	}
 }
 
-void AMyInteractable::SetHidden(bool bHide)
+void AMyInteractable::ResetObject()
 {
-	m_MeshComp->SetVisibility(!bHide);
-	m_MeshComp->SetSimulatePhysics(!bHide);
-	m_MeshComp->SetHiddenInGame(bHide);
+
+
+
 }
 
+bool AMyInteractable::RemoveObject()
+{
+	// 아이템 갯수가 0이 되어서 소멸을 호출 해야한다 .
+	// 1. 소멸 시키기    2. 아이템 매니저를 만들어서 0이된 아이템은 매니저에서 보관 
+	// (임시) 지금은 소멸 시키도록 해둔다.
+	// return   IsPendingKillPending 
+	
+	return Destroy();
+}
+
+void AMyInteractable::ApplyHidden(const bool bHide)
+{
+	AActor::SetHidden(bHide);
+
+	m_bVisiable = !bHide;
+	SetActorHiddenInGame(!m_bVisiable);
+	SetActorEnableCollision(m_bVisiable);
+	SetActorTickEnabled(m_bVisiable);
+
+	// Static Mesh Component
+	if (m_MeshComp->GetStaticMesh() != nullptr)
+	{
+		m_MeshComp->SetHiddenInGame(!m_bVisiable);
+		m_MeshComp->SetVisibility(m_bVisiable);
+		m_MeshComp->SetSimulatePhysics(m_bVisiable);
+	}
+}
+
+void AMyInteractable::AcquireObject()
+{
+	Init();
+
+}
+
+void AMyInteractable::ReleaseObject()
+{
+	// Render Off
+	ApplyHidden(true);
+}

@@ -7,7 +7,8 @@
 #include "SkillCommandInterface.generated.h"
 
 class UMyStatComponent;
-class UMyAnimInstance;
+class UAnimInstanceBase;
+struct FSkillData;
 
 // This class does not need to be modified.
 UINTERFACE(MinimalAPI)
@@ -25,8 +26,11 @@ class MYTEST_TOPDOWN_API ISkillCommandInterface
 
 	// Add interface functions to this class. This is the class that will be inherited to implement this interface.
 public:
-	virtual void UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp) = 0;
+	virtual void InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp) = 0;
+	virtual bool UseSkill() = 0;
 	virtual void StopSkill() = 0;
+	UFUNCTION()
+	virtual void StoppedSkill(UAnimMontage* Montage, bool bInterrupted) = 0;
 
 	virtual void PlaySkill() = 0;
 	virtual void CheckSkill() = 0;

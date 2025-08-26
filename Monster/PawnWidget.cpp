@@ -2,19 +2,32 @@
 
 
 #include "PawnWidget.h"
-#include "MonsterStatComponent.h"
+#include "MyStatComponent.h"
 #include "Components/ProgressBar.h"
+#include "Character/NPCharacter.h"
 
 
 void UPawnWidget::BindHp(class UMyStatComponent* StatComp)
 {
 	//PB_HpBar123 = Cast<UProgressBar>(GetWidgetFromName(TEXT("PB_HpBar"));
-	CurrentStatComp = StatComp;
 	StatComp->OnHPChanged.AddUObject(this, &UPawnWidget::UpdateHp);
+	
+	if (m_OwningActor.IsNull() != true)
+	{
+		CastChecked<ANPCharacter>(m_OwningActor)->m_ChangeAggroGauge.AddUObject(this, &UPawnWidget::UpdateAggroGauge);
+	}
+
 }
 
-void UPawnWidget::UpdateHp()
+void UPawnWidget::UpdateHp(float Hp_Ratio)
 {
-	if (CurrentStatComp.IsValid())
-		PB_HpBar->SetPercent(CurrentStatComp->GetHPRatio());
+	PB_HpBar->SetPercent(Hp_Ratio);
 }
+
+void UPawnWidget::UpdateAggroGauge(uint8 Gauge)
+{
+	// MaxGauge는 100이라는 전제.
+	PB_AggroBar->SetPercent(static_cast<float>(Gauge) / 100.f);
+
+}
+

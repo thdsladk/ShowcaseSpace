@@ -5,6 +5,9 @@
 #include "Components/Image.h"
 #include "Components/CanvasPanelSlot.h"
 
+#include "Data/MyGameSubsystem.h"
+#include "Interface/BehaviorInterface.h"
+
 void UEmotionWidget::NativeConstruct()
 {
 	Super::NativeConstruct();
@@ -13,6 +16,9 @@ void UEmotionWidget::NativeConstruct()
 
 	// 1.0,1.0 의 크기를 가지고 있다 .
 	m_Size = Emotion->RenderTransform.Scale;
+	m_IsPlay = false;
+	m_IsScalingUp = false;
+	
 }
 
 void UEmotionWidget::NativeDestruct()
@@ -24,40 +30,78 @@ void UEmotionWidget::DestroyWidget()
 {
 }
 
-void UEmotionWidget::UpdateWidget()
+void UEmotionWidget::UpdateCommand(uint8 Command)
 {
+
+	UMyGameSubsystem* GameSubsystem = GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
+	const FCommandData* CommandData = GameSubsystem->GetCommandData(Command);
+	if (CommandData != nullptr)
+	{
+		FSlateBrush IconBrush;
+		IconBrush.SetResourceObject(CommandData->Icon);
+		Emotion->SetBrush(IconBrush);
+	}
+ 
 }
 
-void UEmotionWidget::StartEmotion(UTexture2D* Icon, float Time)
+void UEmotionWidget::UpdateCharacterMode(uint8 Mode)
 {
-
-	// Just First
-	if (m_LifeCount == 0)
+	ECharacterMode CharacterMode = static_cast<ECharacterMode>(Mode);
+	if (CharacterMode == ECharacterMode::Battle)
 	{
-		// TO DO 이미지를 변경해야한다 .
+		StartEmotion();
+	}
+	else
+	{
+		EndEmotion();
+	}
+}
 
-		FSlateBrush IconBrush;
-		IconBrush.SetResourceObject(Icon);
-		//IconBrush.ImageSize = FVector2D(Icon->GetSizeX(), Icon->GetSizeY());
-		Emotion->SetBrush(IconBrush);
+void UEmotionWidget::BindFunction(AActor* Owner)
+{
+	if (Owner != nullptr)
+	{
+		m_OwningActor = Owner;
+		IBehaviorInterface* BI = CastChecked<IBehaviorInterface>(Owner);
+		BI->GetChangeModeDelegate().AddUObject(this, &UEmotionWidget::UpdateCharacterMode);
+		BI->GetChangeCommandDelegate().AddUObject(this, &UEmotionWidget::UpdateCommand);
+	}
+}
 
+void UEmotionWidget::StartEmotion()
+{
+	// Just First
+	if (m_IsPlay == false)
+	{
+		m_IsPlay = true;
 		Background->SetVisibility(ESlateVisibility::Visible);
 		Emotion->SetVisibility(ESlateVisibility::Visible);
-		m_LifeCount = static_cast<int32>(Time * 2.f);
-
+		GetWorld()->GetTimerManager().SetTimer(m_hLifeCycle, this, &UEmotionWidget::StartEmotion, 0.5f, true);
 	}
-	GetWorld()->GetTimerManager().SetTimer(m_hLifeCycle, this, &UEmotionWidget::EndEmotion, 0.5f, true);
-
-
+	else
+	{
+		if (m_IsScalingUp == false)
+		{
+			Background->SetRenderScale(m_Size + FVector2D{ 0.1,0.1 });
+			Emotion->SetRenderScale(m_Size + FVector2D{ 0.1,0.1 });
+			m_IsScalingUp = true;
+		}
+		else
+		{
+			Background->SetRenderScale(m_Size - FVector2D{ 0.1,0.1 });
+			Emotion->SetRenderScale(m_Size - FVector2D{ 0.1,0.1 });
+			m_IsScalingUp = false;
+		}
+	}
 
 }
 
 void UEmotionWidget::EndEmotion()
 {
 	// 주의사항 중간에 취소될 경우에 대한 예외처리를 해두어야한다. 
-	// Only Last
-	if (m_LifeCount == 0)
+	if (m_IsPlay == true)
 	{
+		m_IsPlay = false;
 		Background->SetRenderScale(m_Size);
 		Emotion->SetRenderScale(m_Size);
 
@@ -65,19 +109,4 @@ void UEmotionWidget::EndEmotion()
 		Emotion->SetVisibility(ESlateVisibility::Hidden);
 		GetWorld()->GetTimerManager().ClearTimer(m_hLifeCycle);
 	}
-	else if (m_LifeCount > 0)
-	{
-		if ((m_LifeCount % 2) == 0)
-		{
-			Background->SetRenderScale(m_Size + FVector2D{ 0.1,0.1 });
-			Emotion->SetRenderScale(m_Size + FVector2D{0.1,0.1});
-		}
-		else
-		{
-			Background->SetRenderScale(m_Size - FVector2D{ 0.1,0.1 });
-			Emotion->SetRenderScale(m_Size - FVector2D{ 0.1,0.1 });
-		}
-		m_LifeCount--;
-	}
-
 }

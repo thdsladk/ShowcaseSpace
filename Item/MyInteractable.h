@@ -4,12 +4,16 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Actor.h"
+#include "Interface/PoolableInterface.h"
 #include "MyInteractable.generated.h"
 
+/*
+	해당 액터는 맵에 존재하기 위해서 만든 용도이다.
 
+*/
 
 UCLASS()
-class MYTEST_TOPDOWN_API AMyInteractable : public AActor
+class MYTEST_TOPDOWN_API AMyInteractable : public AActor ,public IPoolableInterface
 {
 	GENERATED_BODY()
 	
@@ -26,25 +30,37 @@ protected:
 	virtual void BeginPlay() override;
 	virtual void PostInitializeComponents() override;
 
+#pragma region Collision Function
+protected:
 	UFUNCTION()
 	virtual void OnCharacterBeginOverlap(
 			UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 			UPrimitiveComponent* OtherComp, int32 OtherBodyIndex,
 			bool bFromSweep, const FHitResult& SweepResult
 		);
-
 	UFUNCTION()
 	virtual void OnCharacterEndOverlap(
 		UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
 		UPrimitiveComponent* OtherComp, int32 OtherBodyIndex);
+#pragma endregion
+
 public:	
 	virtual void Init();
-	void Click_F();
+	void OnInteract();
 	virtual void Interact_Implementation();
 	virtual int32 UsingItem() { return 0; }
 	virtual void Replace(FVector Pos);
-	virtual void SetHidden(bool bHide);
 
+	virtual void ResetObject();
+	virtual bool RemoveObject();
+
+#pragma region Poolable Interface
+public:
+	virtual bool IsUseableObject()override { return AActor::IsHidden(); }
+	virtual void ApplyHidden(const bool bHide)override;
+	virtual void AcquireObject()override;
+	virtual void ReleaseObject()override;
+#pragma endregion
 
 protected:
 	UPROPERTY(EditAnywhere, Category = Info, meta = (AllowPrivateAccess = true))
@@ -60,8 +76,11 @@ protected:
 	UPROPERTY(VisibleAnywhere, Category = Effect)
 	TObjectPtr<class UNiagaraComponent> m_Effect;
 
-	bool m_bVisiable;
-	bool m_bInCharacter;
+
+	UPROPERTY(VisibleAnywhere, Category = Boolean)
+	uint8 m_bVisiable : 1;
+	UPROPERTY(VisibleAnywhere, Category = Boolean)
+	uint8 m_bInCharacter : 1;
 
 
 
