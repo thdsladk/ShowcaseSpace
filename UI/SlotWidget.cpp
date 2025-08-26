@@ -8,19 +8,20 @@
 #include "UI/DragSlotWidget.h"
 #include "Input/Reply.h"
 
-#include "MyTest_TopDownCharacter.h"
-#include "MyInventoryComponent.h"
 #include "Blueprint/WidgetBlueprintLibrary.h"
+#include "Blueprint/DragDropOperation.h"
 
 #include "Character/MyTest_TopDownPlayerController.h"
-#include "MyInventoryWidget.h"
-#include "InventoryInterface.h"
+#include "UI/MyInventoryWidget.h"
+#include "Interface/InventoryInterface.h"
+#include "CharacterComponent/MyInventoryComponent.h"
 
+// define 
+#define EmptyIndex 100
 
 bool USlotWidget::Initialize()
 {
     bool Result = Super::Initialize();
-
 
 
     return Result;
@@ -167,21 +168,21 @@ FReply USlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
     {
         if (m_SlotType == ESlotType::EquipmentSlot)
         {
-           // 자동으로 장비를 벗고 아이템 슬롯으로 다시 들어가도록 하는 시스템 필요
-           // m_InventoryComp->SetEquipmentRef(m_SlotIndex, EmptyIndex);
-           // UpdateWidget();
+           // 자동으로 장비를 벗고 아이템 슬롯으로 다시 들어가도록 한다.
+           //m_InventoryComp->UnEquip(m_SlotIndex);
         }
         else if (m_SlotType == ESlotType::ItemSlot)
         {
-            // 아이템 슬롯을 인벤토리에서 벗어나게 하자.
-            APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
-            if (Pawn != nullptr)
-            {
-                CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, {Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0)});
-                UpdateWidget();
-            }
+            //// 아이템 슬롯을 인벤토리에서 벗어나게 하자.
+            //APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+            //if (Pawn != nullptr)
+            //{
+            //    CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, {Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0)});
+            //    
+            //}
         }
 
+        UpdateWidget();
         //Debug
         GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Blue, TEXT("Drag : Right Button Up"));
     }
@@ -200,6 +201,7 @@ FReply USlotWidget::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, 
         if (m_SlotType == ESlotType::EquipmentSlot)
         {
             // 장비 슬롯 좌클릭은 아직 아무것도 없다.
+
         }
         else if (m_SlotType == ESlotType::ItemSlot)
         {
@@ -207,11 +209,42 @@ FReply USlotWidget::NativeOnMouseButtonDoubleClick(const FGeometry& InGeometry, 
             APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
             if (Pawn != nullptr)
             {
-                CastChecked<IInventoryInterface>(Pawn)->UseItem(m_SlotIndex);
+                IInventoryInterface* InventoryInterface = CastChecked<IInventoryInterface>(Pawn);
+                EItemType ItemType = static_cast<EItemType>(InventoryInterface->GetItemType(m_SlotIndex));
+                if (ItemType == EItemType::ConsumableItem)
+                {
+                    InventoryInterface->UseItem(m_SlotIndex);
+                }
+                else if (ItemType == EItemType::EquipmentItem)
+                {
+                    m_InventoryComp->Equip(m_SlotIndex);
+                }
             }
         }
+
+        UpdateWidget();
         //Debug
         GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Black, TEXT("Drag : Left Double Click"));
+    }
+    else if (InMouseEvent.IsMouseButtonDown(EKeys::RightMouseButton) == true)
+    {
+        if (m_SlotType == ESlotType::EquipmentSlot)
+        {
+            // 장비 슬롯 오른쪽 더블클릭은 장비 해제.
+            m_InventoryComp->UnEquip(m_SlotIndex);
+        }
+        else if (m_SlotType == ESlotType::ItemSlot)
+        {
+            // 아이템 슬롯 오른쪽 더블클릭은 아이템 버리기.
+            APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+            if (Pawn != nullptr)
+            {
+                CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, { Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0) });
+            }
+        }
+
+        //Debug
+        GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Black, TEXT("Drag : Right Double Click"));
     }
 
     return Reply.NativeReply;
@@ -255,24 +288,63 @@ bool USlotWidget::NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent
     bool bResult = Super::NativeOnDrop(InGeometry, InDragDropEvent, InOperation);
     int32 DragSlotIndex = CastChecked<UDragSlotWidget>(InOperation)->GetId();
     ESlotType DragSlotType = static_cast<ESlotType>(CastChecked<UDragSlotWidget>(InOperation)->GetType());
+ 
+
     if (m_SlotType == ESlotType::ItemSlot)
     {
-        m_InventoryComp->SwapInventory(DragSlotIndex, m_SlotIndex);  
+        if (DragSlotType == ESlotType::ItemSlot)
+        {
+            m_InventoryComp->SwapInventory(DragSlotIndex, m_SlotIndex); 
+        }
+        else if (DragSlotType == ESlotType::EquipmentSlot)
+        {
+            m_InventoryComp->UnEquip(DragSlotIndex, m_SlotIndex);
+        }
     }
     else if (m_SlotType == ESlotType::EquipmentSlot)
     {
         // 드래그된 아이템이 장비여야한다.  장비로 등록하고 옮겨버리자. 아직 장비인지 구분하는 부분이 없다.
-        //if ()
+            if (m_InventoryComp->Equip(DragSlotIndex, m_SlotIndex) == true)
         {
-            m_InventoryComp->SetEquipmentRef(m_SlotIndex - (m_InventoryComp->GetInventorySize()), DragSlotIndex);
-            m_InventoryComp->SwapInventory(DragSlotIndex, m_SlotIndex);            
+            // 장착 성공
+            //Debug
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Green, TEXT("Equip : Success "));
+        }
+        else
+        {
+            // 장착 실패
+            //Debug
+            GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Red, TEXT("Equip : Fail "));
         }
     }
-    
+
+    UpdateWidget();
+
     // Debug Message
     GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, TEXT("Drop : Dropping"));
 
     return bResult;
+}
+
+void USlotWidget::NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)
+{
+    Super::NativeOnDragCancelled(InDragDropEvent, InOperation);
+
+    // 태그로 슬롯이 위젯의 영역을 벗어났는지 구분하도록 하고 있다.
+    if (InOperation->Tag.Equals(FString{ TEXT("LeaveWidget") }) == true)
+    {
+        // 아이템 슬롯을 인벤토리에서 벗어나게 하자.
+        APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+        if (Pawn != nullptr)
+        {
+                CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, { Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0) });
+        }
+        UpdateWidget();
+    }
+
+    // Debug Message
+    GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Cyan, TEXT("Drop : Drop Item"));
+
 }
 
 void USlotWidget::SetThumbnail(UTexture2D* Texture)
@@ -282,7 +354,7 @@ void USlotWidget::SetThumbnail(UTexture2D* Texture)
         //Border_Image->SetBrushFromTexture(Texture);
         FSlateBrush Brush;
         Brush.SetResourceObject(Texture);
-        Brush.TintColor = FLinearColor(0.1f, 0.1f, 0.1f);
+        Brush.TintColor = FLinearColor(0.1f, 0.1f, 0.1f,0.0f);
         Border_Image->SetBrush(Brush);
         
     }
@@ -290,7 +362,7 @@ void USlotWidget::SetThumbnail(UTexture2D* Texture)
     {
         FSlateBrush Brush;
         Brush.SetResourceObject(Texture);
-        Brush.TintColor = FLinearColor(1.f, 1.f, 1.f);
+        Brush.TintColor = FLinearColor(1.f, 1.f, 1.f,1.f);
         Border_Image->SetBrush(Brush);
     }
 

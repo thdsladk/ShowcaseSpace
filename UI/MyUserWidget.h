@@ -15,9 +15,9 @@ class MYTEST_TOPDOWN_API UMyUserWidget : public UUserWidget
 	GENERATED_BODY()
 	
 public:
-	FORCEINLINE void SetOwningActor(AActor* Owner) { OwningActor = Owner; }
+	FORCEINLINE void SetOwningActor(AActor* Owner) { m_OwningActor = Owner; }
 
 protected:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Actor")
-	TObjectPtr<AActor> OwningActor;
+	TObjectPtr<AActor> m_OwningActor;
 };

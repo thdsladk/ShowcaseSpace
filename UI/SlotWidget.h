@@ -7,6 +7,11 @@
 #include "SlotWidget.generated.h"
 
 class UMyInventoryComponent;
+class UTexture2D;
+class FText;
+class UBorder;
+class UTextBlock;
+
 /**
  * 
  */
@@ -43,13 +48,12 @@ public:
 
 	virtual void NativeOnDragDetected(const FGeometry& InGeometry, const FPointerEvent& InMouseEvent, UDragDropOperation*& OutOperation)override;
 	virtual bool NativeOnDrop(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation)override;
-
-
+	virtual void NativeOnDragCancelled(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
 
 	UFUNCTION()
-	void SetThumbnail(class UTexture2D* Texture);
-	void SetName(class FText TextBlock);
-	void SetQuantity(class FText TextBlock);
+	void SetThumbnail(UTexture2D* Texture);
+	void SetName(FText TextBlock);
+	void SetQuantity(FText TextBlock);
 
 	void SetEmpty();
 
@@ -58,11 +62,11 @@ public:
 
 protected:
 	UPROPERTY(meta = (BindWidget))
-	class UBorder* Border_Image;
+	UBorder* Border_Image;
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Text_Name;
+	UTextBlock* Text_Name;
 	UPROPERTY(meta = (BindWidget))
-	class UTextBlock* Text_Quantity;
+	UTextBlock* Text_Quantity;
 
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "SlotInfo")
@@ -76,4 +80,10 @@ protected:
 	//Reference
 	UPROPERTY()
 	TWeakObjectPtr<UMyInventoryComponent> m_InventoryComp;
+	
+	
+	//UPROPERTY(EditAnywhere)				// Default Slot Image From Editor
+	//TWeakObjectPtr<UTexture2D> m_DefaultSlotImage;
+
+
 };

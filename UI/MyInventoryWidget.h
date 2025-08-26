@@ -7,10 +7,14 @@
 #include "MyInventoryWidget.generated.h"
 
 
+class USlotWidget;
 class UMyInventoryComponent;
 /**
  * 
  */
+
+
+
 UCLASS()
 class MYTEST_TOPDOWN_API UMyInventoryWidget : public UUserWidget
 {
@@ -28,16 +32,19 @@ public:
 	FORCEINLINE
 	void Swap_ItemSlot(int32 From, int32 To) { UpdateWidget_Slot(From); UpdateWidget_Slot(To); }
 
+	virtual void NativeOnDragEnter(const FGeometry& InGeometry, const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
+	virtual void NativeOnDragLeave(const FDragDropEvent& InDragDropEvent, UDragDropOperation* InOperation);
+
+
 protected:
 
 	UPROPERTY()
-	TArray<class USlotWidget*> m_ItemSlotList;
+	TArray<USlotWidget*> m_EquipSlotList;
 	UPROPERTY()
-	TArray<class USlotWidget*> m_EquipSlotList;
+	TArray<USlotWidget*> m_ItemSlotList;
 	
 
 
-	const uint32 m_Row = 5U;
-	const uint32 m_Column = 8U;
+
 
 };

@@ -16,8 +16,10 @@ class MYTEST_TOPDOWN_API ASkill_Stampede : public ASkillCommandBase
 public:
 	ASkill_Stampede();
 
-	virtual void UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)override;
+	virtual void InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)override;
+	virtual bool UseSkill()override;
 	virtual void StopSkill()override;
+	virtual void StoppedSkill(UAnimMontage* Montage, bool bInterrupted)override;
 
 	virtual void PlaySkill()override;
 	virtual void CheckSkill()override;
@@ -25,11 +27,7 @@ public:
 
 	virtual void OnSkillMontageEnded()override;
 	virtual void OnSkillMontagePoint()override;
-
-	virtual void SkillTick()override;
-
-	void PlaySkill_Stampede_Knockup();
-	void CheckSkill_Stampede_Knockup();
+	virtual void SkillTick(float DeltaTime)override;
 
 	void Effect_Thunder();
 	void Effect_Dust();

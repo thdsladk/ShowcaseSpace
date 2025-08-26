@@ -2,7 +2,9 @@
 
 
 #include "Skill/Skill_WaterBall.h"
-#include "MyAnimInstance.h"
+#include "Header/DataStruct.h"
+#include "Animation/AnimInstanceBase.h"
+#include "MyStatComponent.h"
 
 ASkill_WaterBall::ASkill_WaterBall()
 {
@@ -17,32 +19,43 @@ ASkill_WaterBall::ASkill_WaterBall()
 
 }
 
-void ASkill_WaterBall::UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)
+void ASkill_WaterBall::InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)
 {
-	if (nullptr == Pawn || nullptr == Anim || nullptr == StatComp)
+	if (nullptr == SkillData || nullptr == Pawn || nullptr == Anim || nullptr == StatComp || false == m_bEnableSkill)
 		return;
 	m_pOwner = Pawn;
 	m_pAnimInstance = Anim;
 	m_pStatComp = StatComp;
+	m_SkillData = SkillData;
 
 	// AnimInstance Delegate   // 구독하기.
-	m_pAnimInstance->m_OnSkillEnd.AddUObject(this, &ASkill_WaterBall::OnSkillMontageEnded);
-	m_pAnimInstance->m_OnSkillPoint.AddUObject(this, &ASkill_WaterBall::OnSkillMontagePoint);
+	if (m_pAnimInstance->m_OnSkillEnd.IsBoundToObject(this) == false)
+		m_pAnimInstance->m_OnSkillEnd.AddUObject(this, &ASkill_WaterBall::OnSkillMontageEnded);
+	if (m_pAnimInstance->m_OnSkillPoint.IsBoundToObject(this) == false)
+		m_pAnimInstance->m_OnSkillPoint.AddUObject(this, &ASkill_WaterBall::OnSkillMontagePoint);
 
+}
 
+bool ASkill_WaterBall::UseSkill()
+{
+	if (nullptr == m_pOwner || nullptr == m_pAnimInstance || nullptr == m_pStatComp)
+		return false;
 
-	m_pAnimInstance->PlaySkillMontage();
-	m_pAnimInstance->JumpToSection_Skill(TEXT("Cast"));
+	m_pAnimInstance->PlaySkillMontage(3U);
+	m_pAnimInstance->JumpToSection_Skill(3U,TEXT("Cast"));
 
 	// 마법생성 (임시)
 	m_pOwner->GetWorld()->SpawnActor(m_ThunderBall, &m_pOwner->GetTransform());
 
-
-
-
+	return true;
 }
 
 void ASkill_WaterBall::StopSkill()
+{
+	m_StopSkill.Broadcast();
+}
+
+void ASkill_WaterBall::StoppedSkill(UAnimMontage* Montage, bool bInterrupted)
 {
 }
 
@@ -62,6 +75,8 @@ void ASkill_WaterBall::OnEffect()
 
 void ASkill_WaterBall::OnSkillMontageEnded()
 {
+
+	StopSkill();
 }
 
 void ASkill_WaterBall::OnSkillMontagePoint()

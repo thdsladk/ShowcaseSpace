@@ -2,9 +2,11 @@
 
 
 #include "Skill/Skill_DoublePain.h"
-#include "MyAnimInstance.h"
+#include "Header/DataStruct.h"
+#include "Animation/AnimInstanceBase.h"
 #include "MyStatComponent.h"
 #include "Engine/DamageEvents.h"
+
 
 // Sets default values
 ASkill_DoublePain::ASkill_DoublePain()
@@ -26,34 +28,61 @@ ASkill_DoublePain::ASkill_DoublePain()
 	*/
 }
 
-void ASkill_DoublePain::UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)
+void ASkill_DoublePain::InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)
 {
-	if (nullptr == Pawn || nullptr == Anim || nullptr == StatComp)
+	if (nullptr == SkillData || nullptr == Pawn || nullptr == Anim || nullptr == StatComp)
 		return;
 	m_pOwner = Pawn;
 	m_pAnimInstance = Anim;
 	m_pStatComp = StatComp;
+	m_SkillData = SkillData;
 
 	// AnimInstance Delegate   // 구독하기.
-	m_pAnimInstance->m_OnSkillEnd.AddUObject(this, &ASkill_DoublePain::OnSkillMontageEnded);
-	m_pAnimInstance->m_OnSkillPoint.AddUObject(this, &ASkill_DoublePain::OnSkillMontagePoint);
+	if (m_pAnimInstance->m_OnSkillEnd.IsBoundToObject(this) == false)
+		m_pAnimInstance->m_OnSkillEnd.AddUObject(this, &ASkill_DoublePain::OnSkillMontageEnded);
+	if (m_pAnimInstance->m_OnSkillPoint.IsBoundToObject(this) == false)
+		m_pAnimInstance->m_OnSkillPoint.AddUObject(this, &ASkill_DoublePain::OnSkillMontagePoint);
 
 
-	// 여기서 UMyAnimInstace역시 플레이어 캐릭터에 종속된 애니메이션이다 ... 
-	// NPC도 사용 가능하게 하려면해결해야한다.
-	m_pAnimInstance->PlaySkillMontage();
-	m_pAnimInstance->JumpToSection_Skill(TEXT("DoublePain"));
+}
 
+bool ASkill_DoublePain::UseSkill()
+{
+	if (nullptr == m_pOwner || nullptr == m_pAnimInstance || nullptr == m_pStatComp || false == m_bEnableSkill)
+		return false;
+	
+	// Cost
+	if (m_pStatComp->GetMP() < m_SkillData->Cost.Y) { return false; }
+	else { m_pStatComp->AddMP(m_SkillData->Cost.Y * -1); }
+
+	// UAnimInstanceBase 기반으로 구현중. 
+	m_pAnimInstance->PlaySkillMontage(0U);
+	m_pAnimInstance->JumpToSection_Skill(0U,TEXT("DoublePain"));
 
 	m_pOwner->GetWorld()->GetTimerManager().SetTimer(m_Timer_DoublePain, this, &ASkill_DoublePain::PlaySkill, 0.1f, false);
+	
+	// CoolDown
+	m_bEnableSkill = false;
+	FTimerDelegate TimerDelegate;
+	TimerDelegate.BindLambda([&]() {m_bEnableSkill = true; });
+	if (m_pOwner->GetWorld()->GetTimerManager().IsTimerActive(m_CoolDownTimer) == false)
+	{
+		// 여기서 데이터 날리고 , 쿨다운도 시작하고 
+		m_pOwner->GetWorld()->GetTimerManager().SetTimer(m_CoolDownTimer,TimerDelegate, m_SkillData->CoolDown, false);
+	}
 
 	OnEffect();
 
+	return true;
 }
 
 void ASkill_DoublePain::StopSkill()
 {
+	m_StopSkill.Broadcast();
+}
 
+void ASkill_DoublePain::StoppedSkill(UAnimMontage* Montage, bool bInterrupted)
+{
 }
 
 void ASkill_DoublePain::PlaySkill()
@@ -63,11 +92,12 @@ void ASkill_DoublePain::PlaySkill()
 
 void ASkill_DoublePain::CheckSkill()
 {
+	FBaseStatusData Status = m_pStatComp->GetTotalStat();
+
 	TArray<FOverlapResult> OverlapResult;
 	FCollisionQueryParams Params(NAME_None, false, m_pOwner.Get());
 
-	float AttackRange = 150.f;
-	float AttackRadius = 200.f;
+
 	FVector ActorLocation = m_pOwner->GetActorLocation();
 	FVector ActorRigthVector = m_pOwner->GetActorRightVector();
 
@@ -75,15 +105,15 @@ void ASkill_DoublePain::CheckSkill()
 		UE_LOG(LogTemp, Log, TEXT(" ~ World is Null ~"));
 	bool bResult = m_pOwner->GetWorld()->OverlapMultiByChannel(
 		OUT OverlapResult,
-		ActorLocation + ActorRigthVector * AttackRange,
+		ActorLocation + ActorRigthVector * Status.AttackRange,
 		FQuat::Identity,
 		ECollisionChannel::ECC_GameTraceChannel2,
-		FCollisionShape::MakeSphere(AttackRadius),
+		FCollisionShape::MakeSphere(Status.AttackRadius),
 		Params);
 
-	FVector Vec = ActorRigthVector * AttackRange;
+	FVector Vec = ActorRigthVector * Status.AttackRange;
 	FVector Center = ActorLocation + Vec * 0.5f;
-	float HalfHeight = AttackRange * 0.5f + AttackRadius;
+	float HalfHeight = Status.AttackRange * 0.5f + Status.AttackRadius;
 	FQuat Rotation = FRotationMatrix::MakeFromZ(Vec).ToQuat();
 	FColor DrawColor;
 	if (bResult)
@@ -104,7 +134,8 @@ void ASkill_DoublePain::CheckSkill()
 			UE_LOG(LogTemp, Log, TEXT("Hit Actor : %s"), *Result.GetActor()->GetName());
 			FDamageEvent DamageEvent;
 
-			int32 Damage = m_pStatComp->GetAttack() * 20;
+			int32 SkillDamage_Ratio = 20;
+			int32 Damage = (Status.Attack * SkillDamage_Ratio);
 			Result.GetActor()->TakeDamage(Damage, DamageEvent, m_pOwner->GetController(), m_pOwner.Get());
 
 		}
@@ -141,11 +172,12 @@ void ASkill_DoublePain::OnEffect()
 
 void ASkill_DoublePain::OnSkillMontageEnded()
 {
-	
+	StopSkill();
 }
 
 void ASkill_DoublePain::OnSkillMontagePoint()
 {
 	CheckSkill();
 }
+
 

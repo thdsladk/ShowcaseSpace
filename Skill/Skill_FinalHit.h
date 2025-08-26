@@ -16,8 +16,10 @@ class MYTEST_TOPDOWN_API ASkill_FinalHit : public ASkillCommandBase
 public:
 	ASkill_FinalHit();
 
-	virtual void UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)override;
+	virtual void InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)override;
+	virtual bool UseSkill()override;
 	virtual void StopSkill()override;
+	virtual void StoppedSkill(UAnimMontage* Montage, bool bInterrupted);
 
 	virtual void PlaySkill()override;
 	virtual void CheckSkill()override;
@@ -26,23 +28,18 @@ public:
 	virtual void OnSkillMontageEnded()override;
 	virtual void OnSkillMontagePoint()override;
 
-	virtual void SkillTick()override;
-
-	void Effect_GhostTrail();
-
 private:
 	bool SearchActor_Sphere(float Range, float Radius, ECollisionChannel Channel);
 
 protected:
-	// Skill Cooltime 
-	FTimerHandle m_Timer_FinalHit;
 
 	// Target<Enemy> List
 	UPROPERTY()
-	TArray<AActor*> m_TargetList;
+	TArray<TWeakObjectPtr<AActor>> m_TargetList;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "GhostTrailActor")
 	TSubclassOf<class AGhostTrail> m_pGhostTrail;
 
 	bool m_bGhostTrail = false;
+	uint8 m_MaxCount = 10U;
 };

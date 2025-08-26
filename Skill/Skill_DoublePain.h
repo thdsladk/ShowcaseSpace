@@ -15,8 +15,11 @@ public:
 	// Sets default values for this actor's properties
 	ASkill_DoublePain();
 
-	virtual void UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)override;
+
+	virtual void InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)override;
+	virtual bool UseSkill()override;
 	virtual void StopSkill()override;
+	virtual void StoppedSkill(UAnimMontage* Montage, bool bInterrupted)override;
 
 	virtual void PlaySkill()override;
 	virtual void CheckSkill()override;
@@ -24,7 +27,6 @@ public:
 
 	virtual void OnSkillMontageEnded()override;
 	virtual void OnSkillMontagePoint()override;
-
 
 protected:
 

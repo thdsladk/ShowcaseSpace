@@ -16,8 +16,10 @@ class MYTEST_TOPDOWN_API ASkill_WaterBall : public ASkillCommandBase
 public:
 	ASkill_WaterBall();
 
-	virtual void UseSkill(APawn* Pawn, UMyAnimInstance* Anim, UMyStatComponent* StatComp)override;
+	virtual void InitSkill(const FSkillData* SkillData, APawn* Pawn, UAnimInstanceBase* Anim, UMyStatComponent* StatComp)override;
+	virtual bool UseSkill()override;
 	virtual void StopSkill()override;
+	virtual void StoppedSkill(UAnimMontage* Montage, bool bInterrupted)override;
 
 	virtual void PlaySkill()override;
 	virtual void CheckSkill()override;

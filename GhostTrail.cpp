@@ -39,8 +39,6 @@ AGhostTrail::AGhostTrail()
     {
         m_OpacityCurve = CurveFloat.Object;
     }
-
-
     
 }
 
