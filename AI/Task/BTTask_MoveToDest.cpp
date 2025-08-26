@@ -16,12 +16,12 @@ EBTNodeResult::Type UBTTask_MoveToDest::ExecuteTask(UBehaviorTreeComponent& Owne
 	
 	APawn* Self = OwnerComp.GetAIOwner()->GetPawn();
 	
-	FVector CurrentPos = OwnerComp.GetBlackboardComponent()->GetValueAsVector(TEXT("DestPos"));
+	FVector CurrentPos = OwnerComp.GetBlackboardComponent()->GetValueAsVector(AMyAIController::DestPosKey);
 	
-	bool Equal = CurrentPos.Equals(Self->GetActorLocation(),1.f);
+	bool Equal = CurrentPos.Equals(Self->GetActorLocation());
 	if(true == Equal)
 	{
-		OwnerComp.GetBlackboardComponent()->SetValueAsBool(TEXT("HasDestPos"),false);
+		OwnerComp.GetBlackboardComponent()->SetValueAsBool(AMyAIController::HasDestPosKey,false);
 	}
 
 	return Result;

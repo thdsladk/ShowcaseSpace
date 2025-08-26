@@ -5,6 +5,7 @@
 #include "CoreMinimal.h"
 #include "AIController.h"
 #include "Perception/AISense.h"	// (임시) 이건 여기에 써야할지 조금 고민해보자.
+#include "Header/BehaviorEnum.h"
 #include "MyAIController.generated.h"
 
 class UAIPerceptionComponent;
@@ -58,10 +59,10 @@ public:
 	static const FName BattleCommandKey;
 	static const FName NPCModeKey;
 
+	static const FName RadiusTypeKey;
 	static const FName DestPosKey;
 	static const FName HasDestPosKey;
-
-	
+	static const FName AggroGaugeKey;
 		
 
 

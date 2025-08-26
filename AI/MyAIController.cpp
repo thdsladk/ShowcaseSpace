@@ -24,9 +24,10 @@ const FName AMyAIController::TargetKey(TEXT("Target"));
 const FName AMyAIController::StateKey(TEXT("State"));
 const FName AMyAIController::BattleCommandKey(TEXT("BattleCommand"));
 const FName AMyAIController::NPCModeKey(TEXT("NPCMode"));
+const FName AMyAIController::RadiusTypeKey(TEXT("RadiusType"));
 const FName AMyAIController::DestPosKey(TEXT("DestPos"));
 const FName AMyAIController::HasDestPosKey(TEXT("HasDestPos"));
-
+const FName AMyAIController::AggroGaugeKey(TEXT("AggroGauge"));
 
 AMyAIController::AMyAIController()
 {
@@ -86,12 +87,13 @@ void AMyAIController::OnPossess(APawn* InPawn)
 	UBlackboardComponent* BlackboardComp = Blackboard;
 	if (UseBlackboard(BlackboardData, BlackboardComp))
 	{
-		Blackboard->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());	// 블랙보드에 HomePosKey를 대입 
-
-		Blackboard->SetValueAsEnum(StateKey, 0);								// State 값 0으로 초기화 
+		BlackboardComp->SetValueAsVector(HomePosKey, InPawn->GetActorLocation());	// 블랙보드에 HomePosKey를 대입 
+		BlackboardComp->SetValueAsEnum(StateKey, 0);								// State 값 0으로 초기화 
+		
 		if (RunBehaviorTree(BehaviorTree))
 		{
 			// TODO
+
 		}
 	}
 	
@@ -210,8 +212,8 @@ void AMyAIController::HandleSensedSight(AActor* Actor)
 
 	// 공격 명령을 해도 전투모드가 되지는 않는다 .
 	//Blackboard->SetValueAsEnum(BattleCommandKey, static_cast<uint8>(EBattleCommand::Attack));
-	TWeakObjectPtr<ACharacterBase> Character = CastChecked<ACharacterBase>(Actor);
-	if ( Character->IsPlayerCharacter() == true)
+	ACharacterBase* Target = CastChecked<ACharacterBase>(Actor);
+	if ( Target->IsPlayerCharacter() == true)
 	{
 		Blackboard->SetValueAsEnum(NPCModeKey, static_cast<uint8>(ECharacterMode::Battle));
 	}
@@ -222,9 +224,9 @@ void AMyAIController::HandleSensedHearing(AActor* Actor,FVector NoiseLocation)
 	// 여기서 소리를 인지했을때 상태를 변환한다. 
 	
 
-	TWeakObjectPtr<ACharacterBase> Character = CastChecked<ACharacterBase>(Actor);
+	ACharacterBase* Target = CastChecked<ACharacterBase>(Actor);
 
-	if (Character->IsPlayerCharacter() == true)
+	if (Target->IsPlayerCharacter() == true)
 	{
 		Blackboard->SetValueAsEnum(NPCModeKey, static_cast<uint8>(ECharacterMode::Battle));
 		Blackboard->SetValueAsObject(TargetKey, Actor);

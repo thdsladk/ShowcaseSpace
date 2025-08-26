@@ -6,13 +6,24 @@
 #include "Character/CharacterBase.h"
 #include "Engine/StreamableManager.h"
 #include "Interface/MyMonsterWidgetInterface.h"
+#include "Interface/HighlightInterface.h"
 #include "NPCharacter.generated.h"
 
 
 class AMyEquipment;
+class UWidgetComponent;
+class UMyUserWidget;
+class UUserWidget;
+class UInputComponent;
+class AController;
 
+/*
+	클래스 개요
+
+
+*/
 UCLASS(config=NPCList)
-class MYTEST_TOPDOWN_API ANPCharacter : public ACharacterBase, public IMyMonsterWidgetInterface
+class MYTEST_TOPDOWN_API ANPCharacter : public ACharacterBase, public IMyMonsterWidgetInterface, public IHighlightInterface
 {
 	GENERATED_BODY()
 
@@ -21,102 +32,86 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
+	virtual void SetupCharacterData()override;
 public:	
 	virtual void Tick(float DeltaTime) override;
 
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 	virtual void PostInitializeComponents() override;
 
-
-
+#pragma region Behavior Function
 	// Behavior
+	virtual const uint8 GetAggroGauge()override { return m_AggroGauge; };
+	virtual void SetAggroGauge(const uint8 AggroGauge)override;
+	virtual const float GetAggroGauge_Ratio()override { return static_cast<float>(m_AggroGauge) / 100.f; };
+
 	virtual void OnIdle()override;
 	virtual void OnBattle()override;
-	virtual void Attack()override;
-	virtual void AttackCheck()override;
-	virtual void AttackEnd()override;
+	//virtual void AttackCheck()override;
 	virtual void Death()override;
 	virtual void DeathEnd()override;
-	virtual void OnHit()override;
 	virtual void OnDefense()override;
 	virtual void StopDefense()override;
 	virtual void Defense_Hit()override;
 	virtual void OnDetect()override;
+	virtual void DetectEnd()override;
 	virtual void OnAlert()override;
 
 	virtual void OnCommand(uint8 Command)override;
 
 	virtual bool IsOnTriggerEscape()override;
+#pragma endregion
+
+	// Highlight Section
+public:
+	virtual void HighlightActor()override;
+	virtual void UnHighlightActor()override;
 
 
+#pragma region Animation Function
+public:
 	// Animation Function			// 몽타주의 형태를 정형화 해버리면 종속될 위험도 생각하자.
 	UFUNCTION()
-	void OnStopAttackMontage(float InBlendOutTime = 0.f);
-	UFUNCTION()
-	void OnStopDeathMontage(float InBlendOutTime = 0.f);
-	UFUNCTION()
-	void OnAttackMontageEnded(UAnimMontage* Montage, bool bInterrupted);
-	UFUNCTION()
-	void OnDeathMontageEnded();
+	void OnBehaviorMontageEnded();
+#pragma endregion
 
 	// Damage Section
-	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, class AController* EventInstigator, AActor* DamageCauser) override;
+	virtual float TakeDamage(float DamageAmount, struct FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser) override;
 	
 	virtual bool IsPlayerCharacter() override{ return false; }
 
+	// Render Section
+	virtual void ApplyHidden(const bool bHide);
 protected:
 	// Widget Section
-	virtual void SetupMonsterWidget(class UMyUserWidget* InUserWidget) override;
+	virtual void SetupMonsterWidget(UMyUserWidget* InUserWidget) override;
 
-
+#pragma region Components Member
 protected:
-	//S/ 부속 파트 
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "NPCType")
-	FName m_NPCType;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
-	TWeakObjectPtr<AMyEquipment> m_EquipmentLeft {nullptr};
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Equipment")
-	TWeakObjectPtr<AMyEquipment> m_EquipmentRight {nullptr};
-	
-
-	// Components
-
-	//UPROPERTY(VisibleAnywhere)
-	//class UMonsterStatComponent* m_pStatComp;
-	UPROPERTY(VisibleAnywhere)
-	class UAnimInstance_Goblin* m_AnimInstance;
 	UPROPERTY(VisibleAnywhere, Category = "WidgetComp")
-	class UWidgetComponent* m_HpBar;
+	TObjectPtr<UWidgetComponent> m_GaugeBar;
 	UPROPERTY(VisibleAnywhere, Category = "WidgetComp")
-	class UWidgetComponent* m_Emotion;
+	TObjectPtr<UWidgetComponent>m_Emotion;
 
 	// 클래스만 먼저 정의하고 생성해서 쓰는 방식 
 	// WidgetComponent로 붙이는 방식과 다르게 사용  
 	UPROPERTY(VisibleAnywhere)
-	TSubclassOf<class UUserWidget> m_DamageFont;
+	TSubclassOf<UUserWidget> m_DamageFont;
 
+#pragma endregion
 
-	//E/ 부속 파트 
-
-	UPROPERTY()
-	double m_AlertTime = -1.0;
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "AlertTime")
-	double m_AlertCoolTime = 5.0;		// 임시 블루프린트에서 세팅해주자.
-
+protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Color" )
 	float m_fCurrentOpacity = 1.0f;
 
-
+	/*
 protected:
 	void NPCMeshLoadCompleted();
-
+	
 	UPROPERTY(config)
 	TArray<FSoftObjectPath> NPCMeshes;
-
+	
 	TSharedPtr<FStreamableHandle> NPCMeshHandle;
-
-
+	*/
 private:
 	FTimerHandle m_hDeathTimer;
 	FTimerHandle m_hAlertTimer;

@@ -12,9 +12,11 @@
 #include "EnhancedInputComponent.h"
 
 #include "MyTest_TopDownGameMode.h"
-#include "MyTest_TopDownCharacter.h"
+#include "Character/CharacterBase.h"
+#include "Interface/PlayerControllInterface.h"
 #include "SkillComponent.h"
 
+#include "Interface/HighlightInterface.h"
 
 #include "MyHUD.h"
 #include "MyInventoryWidget.h"
@@ -22,29 +24,39 @@
 
 
 AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
+	:m_bGamePlayControllable(true) , m_bSystemControllable(true)
 {
 	bShowMouseCursor = true;
 	DefaultMouseCursor = EMouseCursor::Default;
-	CachedDestination = FVector::ZeroVector;
-	FollowTime = 0.f;
+	m_CachedDestination = FVector::ZeroVector;
+	m_FollowTime = 0.f;
 
-	//SetDestinationKeyAction.Init(nullptr, static_cast<int32>(Key_End));
+	// 마우스 오버 이벤트 ON
+	bEnableMouseOverEvents = true;
 
 	// 코드에서 에셋을 찾아서 호출하기 보다는 에디터에서 블루프린트로 접근해서 세팅해주자 [ 그게 더 안전 ]
-	SetDestinationKeyAction.Add(EKeys::Q, nullptr);
-	SetDestinationKeyAction.Add(EKeys::W, nullptr);
-	SetDestinationKeyAction.Add(EKeys::E, nullptr);
-	SetDestinationKeyAction.Add(EKeys::R, nullptr);
-	SetDestinationKeyAction.Add(EKeys::V, nullptr);
-	SetDestinationKeyAction.Add(EKeys::P, nullptr);
-	SetDestinationKeyAction.Add(EKeys::F, nullptr);
-	SetDestinationKeyAction.Add(EKeys::MouseWheelAxis, nullptr);
-	SetDestinationKeyAction.Add(EKeys::Tab, nullptr);
-	SetDestinationKeyAction.Add(EKeys::SpaceBar, nullptr);
-	SetDestinationKeyAction.Add(EKeys::LeftShift, nullptr);
+	SetDestKeyAction.Add(EKeys::Q, nullptr);
+	SetDestKeyAction.Add(EKeys::W, nullptr);
+	SetDestKeyAction.Add(EKeys::E, nullptr);
+	SetDestKeyAction.Add(EKeys::R, nullptr);
+	SetDestKeyAction.Add(EKeys::V, nullptr);
+	SetDestKeyAction.Add(EKeys::P, nullptr);
+	SetDestKeyAction.Add(EKeys::F, nullptr);
+	SetDestKeyAction.Add(EKeys::A, nullptr);
+	SetDestKeyAction.Add(EKeys::S, nullptr);
+	SetDestKeyAction.Add(EKeys::D, nullptr);
+	SetDestKeyAction.Add(EKeys::G, nullptr);
+	SetDestKeyAction.Add(EKeys::H, nullptr);
+	SetDestKeyAction.Add(EKeys::J, nullptr);
+	SetDestKeyAction.Add(EKeys::T, nullptr);
 	
-	// HUD 
-	static ConstructorHelpers::FClassFinder<UMyHUD> UI_HUD(TEXT("/Game/TopDown/UI/BP_MyHUD.BP_MyHUD_C"));
+	SetDestKeyAction.Add(EKeys::MouseWheelAxis, nullptr);
+	SetDestKeyAction.Add(EKeys::Tab, nullptr);
+	SetDestKeyAction.Add(EKeys::SpaceBar, nullptr);
+	SetDestKeyAction.Add(EKeys::LeftShift, nullptr);
+	
+	// HUD										
+	static ConstructorHelpers::FClassFinder<UMyHUD> UI_HUD(TEXT("/Game/TopDown/Blueprints/UI/BP_MyHUD.BP_MyHUD_C"));
 	if (UI_HUD.Succeeded())
 	{
 		HUD_Class = UI_HUD.Class;
@@ -62,7 +74,7 @@ AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
 		UE_LOG(LogTemp, Log, TEXT("Fail HUD"));
 	}
 
-	static ConstructorHelpers::FClassFinder<UMyInventoryWidget> Inventory_HUD(TEXT("/Game/TopDown/UI/Inventory/WBP_MyInventoryWidget.WBP_MyInventoryWidget_C"));
+	static ConstructorHelpers::FClassFinder<UMyInventoryWidget> Inventory_HUD(TEXT("/Game/TopDown/Blueprints/UI/Inventory/WBP_MyInventoryWidget.WBP_MyInventoryWidget_C"));
 	if (Inventory_HUD.Succeeded())
 	{
 		m_InventoryWidget = Inventory_HUD.Class;
@@ -72,7 +84,7 @@ AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
 		UE_LOG(LogTemp, Log, TEXT("Fail Inventory HUD"));
 	}
 
-	static ConstructorHelpers::FClassFinder<UStatWidget> Status_HUD(TEXT("/Game/TopDown/UI/BP_StatHUD.BP_StatHUD_C"));
+	static ConstructorHelpers::FClassFinder<UStatWidget> Status_HUD(TEXT("/Game/TopDown/Blueprints/UI/BP_StatHUD.BP_StatHUD_C"));
 	if (Status_HUD.Succeeded())
 	{
 		m_StatusWidget = Status_HUD.Class;
@@ -131,7 +143,6 @@ void AMyTest_TopDownPlayerController::ChangeHUDState(uint8 State)
 
 bool AMyTest_TopDownPlayerController::ApplyHUD(TSubclassOf<UUserWidget> Widget, bool bShowMouse, bool EnableClickEvent)
 {
-	//AMyTest_TopDownCharacter* Character = Cast<AMyTest_TopDownCharacter>(UGameplayStatics::GetPlayerCharacter(this, 0));
 	bShowMouseCursor = bShowMouse;
 	bEnableClickEvents = EnableClickEvent;
 
@@ -160,6 +171,12 @@ void AMyTest_TopDownPlayerController::BeginPlay()
 		Subsystem->AddMappingContext(DefaultMappingContext, 0);
 	}
 
+	// 빙의가 안되어서 여기서 해보자 . 
+	// 
+	// 공격이 끝났을때 호출되도록.
+	APawn* Self = GetPawn();
+	CastChecked<ACharacterBase>(GetPawn())->OnAttackEnd.AddUObject(this, &AMyTest_TopDownPlayerController::OnGamePlayControlReturned);
+
 }
 
 void AMyTest_TopDownPlayerController::SetupInputComponent()
@@ -168,116 +185,147 @@ void AMyTest_TopDownPlayerController::SetupInputComponent()
 	Super::SetupInputComponent();
 
 	// Set up action bindings
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(InputComponent))
+	if (UEnhancedInputComponent* EIComp = CastChecked<UEnhancedInputComponent>(InputComponent))
 	{
 		// Setup mouse input events (Left)
-		EnhancedInputComponent->BindAction(SetDestinationLClickAction, ETriggerEvent::Started, this, &AMyTest_TopDownPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationLClickAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::OnSetDestinationTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationLClickAction, ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::OnSetDestinationReleased);
-		EnhancedInputComponent->BindAction(SetDestinationLClickAction, ETriggerEvent::Canceled, this, &AMyTest_TopDownPlayerController::OnSetDestinationReleased);
+		EIComp->BindAction(SetDestinationLClickAction, ETriggerEvent::Started, this, &AMyTest_TopDownPlayerController::OnInputStarted);
+		EIComp->BindAction(SetDestinationLClickAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::OnSetDestinationTriggered);
+		EIComp->BindAction(SetDestinationLClickAction, ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::OnSetDestinationReleased);
+		EIComp->BindAction(SetDestinationLClickAction, ETriggerEvent::Canceled, this, &AMyTest_TopDownPlayerController::OnSetDestinationReleased);
 
 		// Setup mouse input events (Right)
-		EnhancedInputComponent->BindAction(SetDestinationRClickAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::ClickRMouse);
+		EIComp->BindAction(SetDestinationRClickAction, ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::ClickRMouse);
 
 		// Setup touch input events
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &AMyTest_TopDownPlayerController::OnInputStarted);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::OnTouchTriggered);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::OnTouchReleased);
-		EnhancedInputComponent->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &AMyTest_TopDownPlayerController::OnTouchReleased);
+		EIComp->BindAction(SetDestinationTouchAction, ETriggerEvent::Started, this, &AMyTest_TopDownPlayerController::OnInputStarted);
+		EIComp->BindAction(SetDestinationTouchAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::OnTouchTriggered);
+		EIComp->BindAction(SetDestinationTouchAction, ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::OnTouchReleased);
+		EIComp->BindAction(SetDestinationTouchAction, ETriggerEvent::Canceled, this, &AMyTest_TopDownPlayerController::OnTouchReleased);
 
 		// Setup Key events
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::Q], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Q);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::W], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_W);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::E], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_E);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::R], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_R);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::V], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_V);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::P], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Click_P);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::F], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_F);
-																	   
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::Tab], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Click_Tab);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::SpaceBar], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Space);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::SpaceBar], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Space);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::LeftShift], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Shift);
-		EnhancedInputComponent->BindAction(SetDestinationKeyAction[EKeys::LeftShift], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Shift);
+		EIComp->BindAction(SetDestKeyAction[EKeys::Q], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Q);
+		EIComp->BindAction(SetDestKeyAction[EKeys::W], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_W);
+		EIComp->BindAction(SetDestKeyAction[EKeys::E], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_E);
+		EIComp->BindAction(SetDestKeyAction[EKeys::R], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_R);
+		EIComp->BindAction(SetDestKeyAction[EKeys::V], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_V);
+		EIComp->BindAction(SetDestKeyAction[EKeys::P], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Click_P);
+		EIComp->BindAction(SetDestKeyAction[EKeys::F], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_F);
+		EIComp->BindAction(SetDestKeyAction[EKeys::A], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Click_A);
+		EIComp->BindAction(SetDestKeyAction[EKeys::S], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_S);
+		EIComp->BindAction(SetDestKeyAction[EKeys::D], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_D);
+		EIComp->BindAction(SetDestKeyAction[EKeys::D], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_D);
+
+		EIComp->BindAction(SetDestKeyAction[EKeys::G], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_G);
+		EIComp->BindAction(SetDestKeyAction[EKeys::H], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_H);
+		EIComp->BindAction(SetDestKeyAction[EKeys::J], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_J);
+		EIComp->BindAction(SetDestKeyAction[EKeys::T], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_T);
+
+		EIComp->BindAction(SetDestKeyAction[EKeys::Tab], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Click_Tab);
+		EIComp->BindAction(SetDestKeyAction[EKeys::SpaceBar], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Space);
+		EIComp->BindAction(SetDestKeyAction[EKeys::SpaceBar], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Space);
+		EIComp->BindAction(SetDestKeyAction[EKeys::LeftShift], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Shift);
+		EIComp->BindAction(SetDestKeyAction[EKeys::LeftShift], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Shift);
 
 	}
 
 	//Inventory_Notify.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Tab);
 	CastChecked<UMyHUD>(m_CurrentWidget)->m_OnInven.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Tab);
+
+
 }
 
+#pragma region Input Action
 void AMyTest_TopDownPlayerController::OnInputStarted()
 {
+	if (m_bGamePlayControllable == false)return;
 	StopMovement();
 }
 
 // Triggered every frame when the input is held down
 void AMyTest_TopDownPlayerController::OnSetDestinationTriggered()
 {
+	if (m_bGamePlayControllable == false)return;
+
 	// We flag that the input is being pressed
-	FollowTime += GetWorld()->GetDeltaSeconds();
+	m_FollowTime += GetWorld()->GetDeltaSeconds();
 	
 	// We look for the location in the world where the player has pressed the input
 	FHitResult Hit;
 	bool bHitSuccessful = false;
-	if (bIsTouch)
+	if (m_bIsTouch)
 	{
 		bHitSuccessful = GetHitResultUnderFinger(ETouchIndex::Touch1, ECollisionChannel::ECC_Visibility, true, Hit);
 	}
 	else
 	{
+		// 커서일 경우
 		bHitSuccessful = GetHitResultUnderCursor(ECollisionChannel::ECC_Visibility, true, Hit);
 	}
 
 	// If we hit a surface, cache the location
-	if (bHitSuccessful)
+	if (bHitSuccessful == true)
 	{
-		CachedDestination = Hit.Location;
+		m_CachedDestination = Hit.Location;
 	}
 	
 	// Move towards mouse pointer or touch
 	APawn* ControlledPawn = GetPawn();
 	if (ControlledPawn != nullptr)
 	{
-		FVector WorldDirection = (CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
+		FVector WorldDirection = (m_CachedDestination - ControlledPawn->GetActorLocation()).GetSafeNormal();
 		ControlledPawn->AddMovementInput(WorldDirection, 1.0, false);
 	}
 }
 
 void AMyTest_TopDownPlayerController::OnSetDestinationReleased()
 {
+	if (m_bGamePlayControllable == false)return;
 	// If it was a short press
-	if (FollowTime <= ShortPressThreshold)
+	if (m_FollowTime <= ShortPressThreshold)
 	{
 		// We move there and spawn some particles
-		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, CachedDestination);
-		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+		UAIBlueprintHelperLibrary::SimpleMoveToLocation(this, m_CachedDestination);
+		UNiagaraFunctionLibrary::SpawnSystemAtLocation(this, FXCursor, m_CachedDestination, FRotator::ZeroRotator, FVector(1.f, 1.f, 1.f), true, true, ENCPoolMethod::None, true);
+
+		// 상호작용 확인선
+		if (PerformLineTrace() == true)
+		{
+			// 상호작용하는 액터를 눌러도 이동도 가능 
+
+		}
 	}
 
-	FollowTime = 0.f;
+	m_FollowTime = 0.f;
 }
 
 // Triggered every frame when the input is held down
 void AMyTest_TopDownPlayerController::OnTouchTriggered()
 {
-	bIsTouch = true;
+	if (m_bGamePlayControllable == false)return;
+
+	m_bIsTouch = true;
 	OnSetDestinationTriggered();
 }
 
 void AMyTest_TopDownPlayerController::OnTouchReleased()
 {
-	bIsTouch = false;
+	if (m_bGamePlayControllable == false)return;
+
+	m_bIsTouch = false;
 	OnSetDestinationReleased();
 }
 
 void AMyTest_TopDownPlayerController::ClickRMouse()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->Attack();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickRMouse();
 }
 
 void AMyTest_TopDownPlayerController::Click_Tab()
 {
+	if (m_bSystemControllable == false)return;
 
 	if (m_HUDState == AMyTest_TopDownPlayerController::EHUDState::EInventory) // 인벤토리가 열려 있으면 
 	{
@@ -302,14 +350,17 @@ void AMyTest_TopDownPlayerController::Click_Tab()
 
 void AMyTest_TopDownPlayerController::Click_F()
 {
+	if (m_bGamePlayControllable == false)return;
 	//UE_LOG(LogTemp, Log, TEXT(" Interact ON "));
 
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->Click_F();
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->Click_F();
 }
 
 void AMyTest_TopDownPlayerController::Click_P()
 {
+	if (m_bSystemControllable == false)return;
+
 	if (m_HUDState == AMyTest_TopDownPlayerController::EHUDState::EStatus) // 상태창이 열려 있으면 
 	{
 		ChangeHUDState(AMyTest_TopDownPlayerController::EHUDState::EIngame);
@@ -334,59 +385,148 @@ void AMyTest_TopDownPlayerController::Click_P()
 
 void AMyTest_TopDownPlayerController::Click_Q()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->GetSkillComponent().Click_Q();
-	
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_Q);
 }
 
 void AMyTest_TopDownPlayerController::Click_W()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->GetSkillComponent().Click_W();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_W);
 }
 
 void AMyTest_TopDownPlayerController::Click_E()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->GetSkillComponent().Click_E();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_E);
 }
 
 void AMyTest_TopDownPlayerController::Click_R()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->GetSkillComponent().Click_R();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_R);
 }
 
 void AMyTest_TopDownPlayerController::Click_V()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->ChangeCameraView();
+	if (m_bSystemControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_V);
+}
+
+void AMyTest_TopDownPlayerController::Click_A()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_A);
+
+}
+
+void AMyTest_TopDownPlayerController::Click_S()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_S);
+}
+
+void AMyTest_TopDownPlayerController::Click_D()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_D);
+
+	// 방어라서 제어 불가로 만들기
+	m_bGamePlayControllable = false;
+}
+
+void AMyTest_TopDownPlayerController::Click_G()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_G);
+}
+
+void AMyTest_TopDownPlayerController::Click_H()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_H);
+}
+
+void AMyTest_TopDownPlayerController::Click_J()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_J);
+}
+
+void AMyTest_TopDownPlayerController::Click_T()
+{
+	if (m_bGamePlayControllable == false)return;
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_T);
+
 }
 
 void AMyTest_TopDownPlayerController::Click_Space()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->Jump();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_Space);
+
 }
 
 void AMyTest_TopDownPlayerController::Click_Shift()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->Sprint();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ClickButton(EKey::Key_Shift);
 }
 
 void AMyTest_TopDownPlayerController::Release_Space()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->StopJumping();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ReleaseButton(EKey::Key_Space);
+
+	// 공격이라서 제어 불가로 만들기
+	m_bGamePlayControllable = false;
 }
 
 void AMyTest_TopDownPlayerController::Release_Shift()
 {
-	AMyTest_TopDownCharacter* MyCharacter = CastChecked<AMyTest_TopDownCharacter>(GetCharacter());
-	MyCharacter->StopSprint();
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->Release_Shift();
 }
 
+void AMyTest_TopDownPlayerController::Release_D()
+{
+	//if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->ReleaseButton(EKey::Key_D);
+
+	// 제어 가능 만들기
+	m_bGamePlayControllable = true;
+
+}
+#pragma endregion
+
+#pragma region GameMode Function
 void AMyTest_TopDownPlayerController::GameScoreChanged(int32 NewScore)
 {
 	K2_OnGameRetryCount(NewScore);
@@ -401,3 +541,65 @@ void AMyTest_TopDownPlayerController::GameOver()
 {
 	K2_OnGameOver();
 }
+#pragma endregion
+
+bool AMyTest_TopDownPlayerController::PerformLineTrace()
+{
+
+	// 마우스 위치 가져오기
+	float MouseX, MouseY;
+	if (GetMousePosition(MouseX, MouseY) == true)
+	{
+		FVector WorldLocation, WorldDirection;
+
+		// 화면 좌표를 월드 좌표로 변환
+		DeprojectScreenPositionToWorld(MouseX, MouseY, WorldLocation, WorldDirection);
+
+		FVector Start = WorldLocation;
+		FVector End = WorldLocation + (WorldDirection * 10000.0f); // 라인 길이 설정 ( 상수 보다는 지면 같은 기준이 있어야 할거같다. ) 
+
+		FHitResult HitResult;
+		FCollisionQueryParams CollisionParams;
+		//CollisionParams.AddIgnoredActor(GetPawn()); // 플레이어 자신 제외 , 충돌이 적만 하도록 되어있어서 괜찮다.
+
+		// 라인 트레이스 수행   // ECC_Visibility 보이는 것들에 대해서. //ECC_GameTraceChannel2 , Attack에 대한 채널.
+		if (GetWorld()->LineTraceSingleByChannel(HitResult, Start, End, ECC_GameTraceChannel2, CollisionParams) ==true)
+		{
+			AActor* TargetActor = HitResult.GetActor();
+			if (m_TargetActor == TargetActor)
+			{
+				// 이미 선택된 액터를 누른 경우.
+			}
+			else
+			{
+				IHighlightInterface* HighlightInterface = CastChecked<IHighlightInterface>(TargetActor);
+				// EnemyActor를 클릭한 경우 처리
+				UE_LOG(LogTemp, Warning, TEXT(" Hit NPC : %s"), *TargetActor->GetName());
+
+
+				// 하이라이트 ON
+				HighlightInterface->HighlightActor();
+
+				// 이전 하이라이트 후 처리
+				if (m_TargetActor != nullptr)
+				{
+					IHighlightInterface* preHighlightInterface = CastChecked<IHighlightInterface>(m_TargetActor);
+					preHighlightInterface->UnHighlightActor();
+
+				}
+
+				// 타갯 갱신
+				m_TargetActor = TargetActor;
+			}
+
+
+			// Debug
+			DrawDebugLine(GetWorld(), Start, End, FColor::Blue, false, 2.0f);
+
+			return true;
+		}
+	}
+
+	return false;
+}
+

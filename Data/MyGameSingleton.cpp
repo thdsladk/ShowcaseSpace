@@ -4,7 +4,7 @@
 #include "Data/MyGameSingleton.h"
 
 
-DEFINE_LOG_CATEGORY(LogMyGameSingleton);
+//DEFINE_LOG_CATEGORY(LogMyGameSingleton);
 
 UMyGameSingleton::UMyGameSingleton()
 {
@@ -37,6 +37,6 @@ UMyGameSingleton& UMyGameSingleton::Get()
 		return *Singleton;
 	}
 
-	UE_LOG(LogMyGameSingleton, Error, TEXT("Invalid Game Singleton"));
+	//UE_LOG(LogMyGameSingleton, Error, TEXT("Invalid Game Singleton"));
 	return *NewObject<UMyGameSingleton>();
 }
