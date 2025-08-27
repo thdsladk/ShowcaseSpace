@@ -25,6 +25,6 @@ public:
     FOnTaskCompleted m_OnCompleted;
 protected:
     UPROPERTY() 
-    UMyAbilityInstance* m_Owner = nullptr;
+    UMyAbilityInstance* m_pOwner = nullptr;
 
 };

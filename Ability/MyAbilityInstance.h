@@ -41,7 +41,10 @@ public:
 
     // Accessors
     UFUNCTION(BlueprintPure) 
+    const UAbilityComponent* GetAbilityComponent() const { return m_pAbilityComp.Get(); }
+    UFUNCTION(BlueprintPure)
     const UMyAbilityData* GetAbilityData() const { return m_pAbilityData.Get(); }
+
     UFUNCTION(BlueprintPure) 
     FAbilityHandle GetHandle() const { return m_Handle; }
 

@@ -17,45 +17,66 @@ void UMyAbilityInstance::Initialize(UAbilityComponent* pAbilityComp,UMyAbilityDa
 
 EAbilityActivateResult UMyAbilityInstance::Activate()
 {
+    // 1) 필수 포인터 검사
     if (m_pAbilityComp == nullptr || m_pAbilityData == nullptr)
     {
         UE_LOG(LogTemp, Warning, TEXT("Activate failed: Missing AC or Data"));
         return EAbilityActivateResult::InternalError;
     }
 
-    // 태그 부여
+    // 2) 발동 중 태그 부여
     if (m_pAbilityData->m_Exclusivity.ApplyWhileActive.Num() > 0)
     {
         m_pAbilityComp->AddOwnedTags(m_pAbilityData->m_Exclusivity.ApplyWhileActive);
         m_AppliedTags.AppendTags(m_pAbilityData->m_Exclusivity.ApplyWhileActive);
     }
 
-    // 섹션 이름 찾기: 태그의 마지막 세그먼트를 추출
-    FString FullTagString = m_pAbilityData->m_AbilityTag.ToString(); 
-
-    // '.' 기준으로 분리
+    // 3) AbilityTag에서 마지막 세그먼트를 섹션 이름으로 추출
+    FString FullTagString = m_pAbilityData->m_AbilityTag.ToString();  
     TArray<FString> Segments;
     FullTagString.ParseIntoArray(Segments, TEXT("."), /*CullEmpty=*/true);
 
-    // 몽타주 재생
-    if (Segments.IsEmpty() == false)
+    // 4) 몽타주 재생
+    if (m_pAbilityData->m_pMontage != nullptr && Segments.Num() > 0)
     {
-        USkeletalMeshComponent* MeshComp = m_pAbilityComp->GetOwner()->FindComponentByClass<USkeletalMeshComponent>();
-        if (MeshComp != nullptr)
-        {
-            UAnimInstance* Anim = Cast<UAnimInstance>(MeshComp->GetAnimInstance());
-            if (Anim != nullptr)
-            {
-				Anim->Montage_Play(m_pAbilityData->m_pMontage);
-                Anim->Montage_JumpToSection(*Segments.Last(), m_pAbilityData->m_pMontage);
+        const FName SectionName(*Segments.Last()); 
 
-                UE_LOG(LogTemp, Log, TEXT("Playing Montage Section: %s"), *Segments.Last());
+        if (USkeletalMeshComponent* MeshComp = m_pAbilityComp->GetOwner()->FindComponentByClass<USkeletalMeshComponent>())
+        {
+            if (UAnimInstance* Anim = MeshComp->GetAnimInstance())
+            {
+                Anim->Montage_Play(m_pAbilityData->m_pMontage);
+                Anim->Montage_JumpToSection(SectionName, m_pAbilityData->m_pMontage);
+
+                UE_LOG(LogTemp, Log, TEXT("Playing Montage Section: %s"), *SectionName.ToString());
+            }
+        }
+    }
+    else
+    {
+        UE_LOG(LogTemp, Warning, TEXT("Montage not set or invalid AbilityTag format"));
+    }
+
+    // 5) 태스크 파이프라인 실행
+    if (m_pAbilityData->m_TaskPipeline.Num() > 0)
+    {
+        for (TSubclassOf<UMyAbilityTask> TaskClass : m_pAbilityData->m_TaskPipeline)
+        {
+            if (TaskClass != nullptr)
+            {
+                // 태스크 생성 (Outer를 Instance로 지정)
+                UMyAbilityTask* Task = NewObject<UMyAbilityTask>(this, TaskClass);
+                m_Tasks.Add(Task);
+
+                // 태스크 시작
+                Task->Start(this);
+
+                UE_LOG(LogTemp, Log, TEXT("Started Task: %s"), *TaskClass->GetName());
             }
         }
     }
 
     return EAbilityActivateResult::Success;
-
 }
 
 void UMyAbilityInstance::Tick(float DeltaTime) 
@@ -63,7 +84,7 @@ void UMyAbilityInstance::Tick(float DeltaTime)
     // 태스크 업데이트
     for (UMyAbilityTask* Task : m_Tasks)
     {
-        if (Task != nullptr && Task->WantsTick())
+        if (Task != nullptr && Task->WantsTick() ==true)
         {
             Task->Tick(DeltaTime);
         }
