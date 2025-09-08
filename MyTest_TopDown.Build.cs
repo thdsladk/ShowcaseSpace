@@ -43,6 +43,9 @@ public class MyTest_TopDown : ModuleRules
             "MyTest_TopDown/Game",
             "MyTest_TopDown/Animation",
 			"MyTest_TopDown/Ability",
+            "MyTest_TopDown/Ability/Task",
+            "MyTest_TopDown/Projectile",
+
 
         });
 	}

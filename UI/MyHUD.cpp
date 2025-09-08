@@ -154,15 +154,15 @@ void UMyHUD::BindSkill(USkillComponent* SkillComp)
 
 		// (임시) 스킬을 테이블정보로 세팅하는것에 대하여 고민중... 버튼이라서...
 		const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_Q));
-		
-		FButtonStyle Style = Btn_Skill1->WidgetStyle;
+
+		//FButtonStyle Style = Btn_Skill1->WidgetStyle;
 		FSlateBrush Brush;
 		Brush.SetResourceObject(SkillData->Icon);
-		Style.SetNormal(Brush);
-		Style.SetHovered(Brush);
-		Style.SetPressed(Brush);
-		Style.SetDisabled(Brush);
-		Btn_Skill1->SetStyle(Style);
+		Btn_Skill1->WidgetStyle.SetNormal(Brush);
+		Btn_Skill1->WidgetStyle.SetHovered(Brush);
+		Btn_Skill1->WidgetStyle.SetPressed(Brush);
+		Btn_Skill1->WidgetStyle.SetDisabled(Brush);
+		//Btn_Skill1->SetStyle(Style);
 
 	}
 
