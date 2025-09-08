@@ -66,6 +66,8 @@ public:
 
 	const int32 GetItemTableSize();
 
+
+
 #pragma region ObjectPool Function
 public:
 	// ObjectPool Function

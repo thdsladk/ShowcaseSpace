@@ -8,8 +8,8 @@
 #include "MonsterStatComponent.generated.h"
 
 
-DECLARE_MULTICAST_DELEGATE(FOnHPChanged);
-DECLARE_MULTICAST_DELEGATE(FOnDeathCheck);
+//DECLARE_MULTICAST_DELEGATE(FOnHPChanged);
+//DECLARE_MULTICAST_DELEGATE(FOnDeathCheck);
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class MYTEST_TOPDOWN_API UMonsterStatComponent : public UMyStatComponent
@@ -19,6 +19,7 @@ class MYTEST_TOPDOWN_API UMonsterStatComponent : public UMyStatComponent
 public:	
 	// Sets default values for this component's properties
 	UMonsterStatComponent();
+	virtual void SetupData(FString TableRawName);
 
 protected:
 	// Called when the game starts

@@ -163,5 +163,3 @@ enum class EGauge : uint8
 	SP				UMETA(DisplayName = "SP"),
 	End				UMETA(DisplayName = "End")
 };
-
-

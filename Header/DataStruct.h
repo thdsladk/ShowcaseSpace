@@ -427,6 +427,57 @@ struct FSkillUIData : public  FTableRowBase
 };
 
 
+#pragma region Projectile Data
+
+USTRUCT(BlueprintType)
+struct FProjectileData : public  FTableRowBase
+{
+	GENERATED_BODY()
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FString ProjectileName;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	uint8 ProjectileType; // EProjectileType 으로 대체될 예정
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Speed;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	double GravityScale;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FIntVector Damage;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	EDamageType DamageType;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	double LifeTime;
+
+	
+};
+
+
+USTRUCT(BlueprintType)
+struct FProjectileRunTimeData : public  FProjectileData
+{
+	GENERATED_BODY()
+
+	// 데이터 테이블에서는 사용 하지 않는 값.
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* Owner = nullptr;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	AActor* Target = nullptr;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Location;
+	UPROPERTY(EditAnywhere, BlueprintReadWrite)
+	FVector Rotation;
+
+};
+
+
+#pragma endregion
+
+
 #pragma region Character Info
 /*
 	캐릭터에 대한 정보들을 나열하는 구조체
