@@ -89,10 +89,12 @@ void UMyAbilityInstance::Tick(float DeltaTime)
             Task->Tick(DeltaTime);
         }
     }
+    
 }
 
 void UMyAbilityInstance::End(bool bCanceled /*,FGameplayTag Reason*/)
 {
+    // bCanceled로 취소된건지 종료인건지 구분  
     if (m_bHasEnded == true)
         return; // 중복 호출 방지
     m_bHasEnded = true;
@@ -109,6 +111,7 @@ void UMyAbilityInstance::End(bool bCanceled /*,FGameplayTag Reason*/)
         }
     }
     m_Tasks.Empty();
+    
 
     // 2) 부여했던 태그 회수
     if (m_pAbilityComp != nullptr && m_AppliedTags.Num() > 0)

@@ -3,7 +3,6 @@
 
 #include "Animation/AnimInstanceBase.h"
 #include "Character/CharacterBase.h"
-//#include "GameFramework/PawnMovementComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "CharacterComponent/MyStatComponent.h"
 
@@ -74,47 +73,7 @@ const int32 UAnimInstanceBase::GetMontageSectionNum(uint8 MontageIndex)
 
 	return m_MontageList[MontageIndex]->CompositeSections.Num();	
 }
-/*
-void UAnimInstanceBase::PlayBehaviorMontage(float PlaySpeed)
-{
-	if (m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)].IsNull() == false)
-		Montage_Play(m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)], PlaySpeed);
-}
 
-void UAnimInstanceBase::StopBehaviorMontage(float InBlendOutTime)
-{
-	if (m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)].IsNull() == false)
-		Montage_Stop(InBlendOutTime, m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)]);
-}
-
-void UAnimInstanceBase::JumpToSection_Behavior(FName SectionName)
-{
-	if (m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)].IsNull() == false)
-		Montage_JumpToSection(SectionName, m_MontageList[static_cast<uint8>(EMontageList::BehaviorMontage)]);
-}
-
-void UAnimInstanceBase::PlayAttackMontage(float PlaySpeed)
-{
-	if (m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)].IsNull() == false)
-		Montage_Play(m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)], PlaySpeed);
-}
-
-void UAnimInstanceBase::StopAttackMontage(float InBlendOutTime)
-{
-	if (m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)].IsNull() == false)
-		Montage_Stop(InBlendOutTime, m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)]);
-}
-
-void UAnimInstanceBase::JumpToSection_Attack(uint8 SectionIndex)
-{
-
-	if (m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)].IsNull() == false)
-	{
-		m_AttackIndex = SectionIndex;
-		Montage_JumpToSection(GetAttackMontageName(SectionIndex), m_MontageList[static_cast<uint8>(EMontageList::AttackMontage)]);
-	}
-}
-*/
 void UAnimInstanceBase::PlaySkillMontage(uint8 SkillIndex,float PlaySpeed)
 {
 	if (m_SkillMontageList[SkillIndex].IsNull() == false)

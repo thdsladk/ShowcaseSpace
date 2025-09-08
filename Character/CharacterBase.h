@@ -35,6 +35,9 @@ class MYTEST_TOPDOWN_API ACharacterBase : public ACharacter, public IBehaviorInt
 {
 	GENERATED_BODY()
 public:
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "StateTag")
+	TMap<EBehaviorState, FGameplayTag> StateTagMapping;
+
 	TArray<FString> strState{
 		TEXT("Idle"),
 		TEXT("Walk"),

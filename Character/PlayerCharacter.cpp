@@ -1,7 +1,7 @@
 // Fill out your copyright notice in the Description page of Project Settings.
 
 // Default Section
-#include "Character/PlayerCharacter.h"
+#include "PlayerCharacter.h"
 #include "UObject/ConstructorHelpers.h"
 #include "Camera/CameraComponent.h"
 #include "Components/DecalComponent.h"
@@ -40,7 +40,6 @@
 
 // Audio Section
 #include "Sound/SoundCue.h"
-#include "PlayerCharacter.h"
 
 
 APlayerCharacter::APlayerCharacter()
@@ -551,11 +550,24 @@ void APlayerCharacter::ClickButton(uint8 Button)
 	switch (Button)
 	{
 		case AMyTest_TopDownPlayerController::EKey::Key_Q:
-		case AMyTest_TopDownPlayerController::EKey::Key_W:
+		{
+			//m_pSkillComp->UseSkill(Button);
+			Click_Q();
+			break;
+		}
 		case AMyTest_TopDownPlayerController::EKey::Key_E:
+		{
+			Click_E();
+			break;
+		}
 		case AMyTest_TopDownPlayerController::EKey::Key_R:
 		{
-			m_pSkillComp->UseSkill(Button);
+			Click_R();
+			break;
+		}
+		case AMyTest_TopDownPlayerController::EKey::Key_W:
+		{
+			Click_W();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_V:
@@ -640,17 +652,32 @@ void APlayerCharacter::Click_Q()
 
 void APlayerCharacter::Click_W()
 {
-	m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_W));
+	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_W));
+	FName Tag(TEXT("Ability.Skill.StormKill"));
+
+	FAbilityHandle Handle;
+	FGameplayTag GameplayTag = FGameplayTag::RequestGameplayTag(Tag);
+	m_pAbilityComp->TryActivateByTag(GameplayTag, Handle);
 }
 
 void APlayerCharacter::Click_E()
 {
-	m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_E));
+	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_E));
+	FName Tag(TEXT("Ability.Skill.FireBall"));
+
+	FAbilityHandle Handle;
+	FGameplayTag GameplayTag = FGameplayTag::RequestGameplayTag(Tag);
+	m_pAbilityComp->TryActivateByTag(GameplayTag, Handle);
 }
 
 void APlayerCharacter::Click_R()
 {
-	m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_R));
+	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_R));
+	FName Tag(TEXT("Ability.Skill.WaterBall"));
+	
+	FAbilityHandle Handle;
+	FGameplayTag GameplayTag = FGameplayTag::RequestGameplayTag(Tag);
+	m_pAbilityComp->TryActivateByTag(GameplayTag, Handle);
 }
 
 void APlayerCharacter::Click_V()

@@ -7,7 +7,9 @@
 #include "Ability/MyAbilityData.h"
 
 #include "Character/CharacterBase.h"
+#include "MyTest_TopDownPlayerController.h"
 #include "CharacterComponent\MyStatComponent.h"
+#include "AbilityComponent.h"
 
 // Sets default values for this component's properties
 UAbilityComponent::UAbilityComponent()
@@ -59,10 +61,16 @@ void UAbilityComponent::RevokeByTag(FGameplayTag AbilityTag)
 
 EAbilityActivateResult UAbilityComponent::TryActivateByTag(FGameplayTag AbilityTag, FAbilityHandle& OutHandle)
 {
-    // 태그에서 필요한 부분만 떼어낸 태그로 검색
+    // 태그에서 필요한 부분만 떼어낸 태그로 검색  // (임시) 처음 실패하면 3번째 태그까지도 비교한다. 
     auto FoundData = m_Granted.Find(CutStringToTag(AbilityTag));
-    if (FoundData == nullptr) 
-        return EAbilityActivateResult::NotGranted;
+    if (FoundData == nullptr)
+    {
+        FoundData = m_Granted.Find(AbilityTag);
+        if (FoundData == nullptr)
+        {
+            return EAbilityActivateResult::NotGranted;
+        }
+    }
 
     UMyAbilityData* AbilityData = *FoundData;
     if (AbilityData != nullptr)
@@ -153,7 +161,16 @@ void UAbilityComponent::AddOwnedTags(const FGameplayTagContainer& Tags)
 void UAbilityComponent::RemoveOwnedTags(const FGameplayTagContainer& Tags)
 {
     m_OwnedTags.RemoveTags(Tags);
+}
 
+bool UAbilityComponent::CheckOwnedTags(const FGameplayTagContainer& Tags)
+{
+    for(auto& Tag : Tags)
+    {
+        if (m_OwnedTags.HasTag(Tag) == false)
+            return false;
+	}
+    return true;
 }
 
 FGameplayTag UAbilityComponent::CutStringToTag(FGameplayTag& FullTag)

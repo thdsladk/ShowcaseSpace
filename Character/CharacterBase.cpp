@@ -86,6 +86,12 @@ ACharacterBase::ACharacterBase()
 		m_EquipmentMeshComp[Index]->AttachToComponent(GetMesh(), FAttachmentTransformRules::KeepRelativeTransform, m_PartTypeList[Index]);
 	}
 
+	// (임시) 캐릭터 State랑 매핑해서 써보자 .
+	for (uint8 State =0; State < static_cast<uint8>(EBehaviorState::End);State++)
+	{
+		StateTagMapping.Add(static_cast<EBehaviorState>(State), FGameplayTag::EmptyTag);
+	}
+	
 
 }
 
@@ -112,11 +118,10 @@ void ACharacterBase::BeginPlay()
 	{
 		m_pAbilityComp->GrantAbility(AbilityData.Value.Get());
 		
-
-
 		// 시작 모드 태그(예: 전투 또는 평시) 보유 처리
 
 	}
+
 
 }
 
@@ -136,6 +141,7 @@ void ACharacterBase::PostInitializeComponents()
 		m_pAnimInstance->m_OnAttackHit.AddUObject(this, &ACharacterBase::AttackCheck);
 		m_pAnimInstance->m_OnAttackEnd.AddUObject(this, &ACharacterBase::AttackEnd);
 		m_pAnimInstance->m_OnFootStep.AddUObject(this, &ACharacterBase::PlayFootStep);
+
 	}
 	else
 	{
@@ -174,47 +180,6 @@ void ACharacterBase::SetupPlayerInputComponent(UInputComponent* PlayerInputCompo
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
 
 }
-
-#pragma region Behavior Interface
-void ACharacterBase::SetState(const EBehaviorState State)
-{
-	// 상태를 전환할때 Set함수를 쓰는 이유는 노티와 디버그를 편하게 하기 위해서 
-	 
-#pragma region Debug Section
-	//if (State == EBehaviorState::Idle && m_CharacterState != EBehaviorState::Idle)
-	//{
-	//	UE_LOG(LogTemp, Log, TEXT(" WoW Yo Gi It Ne "));
-	//}
-#pragma endregion
-
-	m_CharacterState = State; 
-	OnChangeBehavior.Broadcast();
-}
-
-void ACharacterBase::SetMode(const ECharacterMode Mode)
-{
-	if(m_Mode != Mode)
-	{ 
-		m_Mode = Mode; 
-		OnChangeMode.Broadcast(static_cast<uint8>(m_Mode)); 
-	}
-}
-
-void ACharacterBase::SetState(const uint8 State)
-{
-	// 상태를 전환할때 Set함수를 쓰는 이유는 노티와 디버그를 편하게 하기 위해서 
-	
-#pragma region Debug Section
-	//if (static_cast<EBehaviorState>(State) == EBehaviorState::Idle && m_CharacterState != EBehaviorState::Idle)
-	//{
-	//	UE_LOG(LogTemp, Log, TEXT(" WoW Yo Gi It Ne "));
-	//}
-#pragma endregion
-
-	m_CharacterState = static_cast<EBehaviorState>(State); 
-	OnChangeBehavior.Broadcast();
-}
-#pragma endregion
 
 void ACharacterBase::Effect_Flick(FLinearColor Color, float Rate)
 {
@@ -984,6 +949,47 @@ void ACharacterBase::ApplyHidden(const bool bHide)
 }
 
 #pragma region Behavior Interface
+void ACharacterBase::SetState(const EBehaviorState State)
+{
+	// 상태를 전환할때 Set함수를 쓰는 이유는 노티와 디버그를 편하게 하기 위해서 
+
+#pragma region Debug Section
+	//if (State == EBehaviorState::Idle && m_CharacterState != EBehaviorState::Idle)
+	//{
+	//	UE_LOG(LogTemp, Log, TEXT(" WoW Yo Gi It Ne "));
+	//}
+#pragma endregion
+
+
+	m_CharacterState = State;
+	OnChangeBehavior.Broadcast();
+
+}
+
+void ACharacterBase::SetMode(const ECharacterMode Mode)
+{
+	if (m_Mode != Mode)
+	{
+		m_Mode = Mode;
+		OnChangeMode.Broadcast(static_cast<uint8>(m_Mode));
+	}
+}
+
+void ACharacterBase::SetState(const uint8 State)
+{
+	// 상태를 전환할때 Set함수를 쓰는 이유는 노티와 디버그를 편하게 하기 위해서 
+
+#pragma region Debug Section
+	//if (static_cast<EBehaviorState>(State) == EBehaviorState::Idle && m_CharacterState != EBehaviorState::Idle)
+	//{
+	//	UE_LOG(LogTemp, Log, TEXT(" WoW Yo Gi It Ne "));
+	//}
+#pragma endregion
+
+	m_CharacterState = static_cast<EBehaviorState>(State);
+	OnChangeBehavior.Broadcast();
+}
+
 void ACharacterBase::OnIdle()
 {
 }

@@ -21,26 +21,55 @@ void UAbilityTask_Move::Start(UMyAbilityInstance* Owner)
 
     // 캐릭터 얻기
     ACharacter* Character = CastChecked<ACharacter>(m_pOwner->GetAbilityComponent()->GetOwner());
-
     m_StartLocation = Character->GetActorLocation();
-
     m_Duration = m_pOwner->GetAbilityData()->m_pMontage->GetPlayLength();
-
-    
-
-
-    // 타겟 위치 세팅 
     m_TargetLocation = m_StartLocation + (Character->GetActorForwardVector().GetSafeNormal() * m_Distance);
 
-    // 중력 제거 
-    UCharacterMovementComponent* MoveComp = Character->GetCharacterMovement();
-    if (MoveComp != nullptr)
+
+    switch (m_MoveType)
     {
-        m_OriginalMode = MoveComp->MovementMode;
-        MoveComp->SetMovementMode(MOVE_Flying);
+    case EMoveType::None:
+    {
+        Cancel();
+        break;
     }
+    case EMoveType::Walk:
+    {
+		 break;
+    }
+    case EMoveType::Sprint:
+    {
 
+        break;
+    }
+    case EMoveType::CrouchWalk:
+    {
 
+        break;
+    }
+    case EMoveType::Jump:
+    {
+        // 타겟 위치 세팅 
+        FVector Force = (Character->GetActorForwardVector().GetSafeNormal() * m_Distance);
+        Force.Z += m_MaxHeight;
+
+        Character->LaunchCharacter(Force, true, true);
+
+        break;
+    }
+    case EMoveType::Fly:
+    {
+
+        break;
+    }
+    case EMoveType::Swim:
+    {
+
+        break;
+    }
+    default:
+        break;
+    }
 
 }
 
@@ -51,43 +80,38 @@ void UAbilityTask_Move::Tick(float DeltaTime)
         Cancel();
         return;
     }
-    
-    ACharacter* Character = CastChecked<ACharacter>(m_pOwner->GetAbilityComponent()->GetOwner());
 
     m_ElapsedTime += DeltaTime;
     float Time = FMath::Clamp(m_ElapsedTime / m_Duration, 0.f, 1.f);
 
+    if(m_MoveType != EMoveType::Jump)
+    {
+        // 캐릭터 얻기
+        ACharacter* Character = CastChecked<ACharacter>(m_pOwner->GetAbilityComponent()->GetOwner());
+        FVector NewLocation = FMath::Lerp(m_StartLocation, m_TargetLocation, Time);
+        Character->SetActorLocation(NewLocation);
+	}
 
-    // 수평 보간
-    FVector Horizontal = FMath::Lerp(m_StartLocation, m_TargetLocation, Time);
-
-    // 포물선 높이 계산 (정점은 Duration/2 시점)
-    float Height = m_MaxHeight - (4.f * m_MaxHeight * FMath::Square(Time - 0.5f));
-
-    Horizontal.Z += Height;
-
-    Character->SetActorLocation(Horizontal, true);
 
     if (Time >= 1.f)
     {
         Cancel(); // 종료
     }
 
-
 }
 
 void UAbilityTask_Move::Cancel()
 {
-
-    // 포물선 이동 종료 → 중력 복구
-    ACharacter* Character = CastChecked<ACharacter>(m_pOwner->GetAbilityComponent()->GetOwner());
-    if (Character->GetCharacterMovement() != nullptr)
-    {
-        Character->GetCharacterMovement()->SetMovementMode(m_OriginalMode);
-
-        // (임시) 끝나면 인스턴스에 대한 주소를 nullptr로 만들면 틱이 종료.
+    if (m_pOwner != nullptr)
+    { 
         m_pOwner = nullptr;
+        m_OnCompleted.Broadcast();
     }
+    else
+    {
+        return;
+    }
+
 }
 
 bool UAbilityTask_Move::WantsTick() const

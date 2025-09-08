@@ -13,6 +13,7 @@
 
 #include "MyTest_TopDownGameMode.h"
 #include "Character/CharacterBase.h"
+#include "AnimInstanceBase.h"
 #include "Interface/PlayerControllInterface.h"
 #include "SkillComponent.h"
 
@@ -175,7 +176,10 @@ void AMyTest_TopDownPlayerController::BeginPlay()
 	// 
 	// 공격이 끝났을때 호출되도록.
 	APawn* Self = GetPawn();
+	ACharacterBase* CharacterBase = CastChecked<ACharacterBase>(Self);
 	CastChecked<ACharacterBase>(GetPawn())->OnAttackEnd.AddUObject(this, &AMyTest_TopDownPlayerController::OnGamePlayControlReturned);
+	// (임시) AnimInstanceBase를 컨트롤러에서 꺼내서 바인딩해도 되는가 ?
+	CastChecked<UAnimInstanceBase>(CharacterBase->GetMesh()->GetAnimInstance())->m_OnSprintEnd.AddUObject(this, &AMyTest_TopDownPlayerController::OnGamePlayControlReturned);
 
 }
 
@@ -397,6 +401,7 @@ void AMyTest_TopDownPlayerController::Click_W()
 
 	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
 	Interface->ClickButton(EKey::Key_W);
+
 }
 
 void AMyTest_TopDownPlayerController::Click_E()
@@ -511,6 +516,9 @@ void AMyTest_TopDownPlayerController::Release_Shift()
 
 	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
 	Interface->Release_Shift();
+
+	// 달리기 마무리중 제어 불가로 만들기
+	m_bGamePlayControllable = false;
 }
 
 void AMyTest_TopDownPlayerController::Release_D()

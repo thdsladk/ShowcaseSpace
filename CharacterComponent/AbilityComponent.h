@@ -4,7 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Ability\MyAbilityData.h"
+#include "MyAbilityData.h"
 #include "AbilityComponent.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnAbillity, uint8);
@@ -95,6 +95,9 @@ public:
 	void AddOwnedTags(const FGameplayTagContainer& Tags);
 	UFUNCTION(BlueprintCallable) 
 	void RemoveOwnedTags(const FGameplayTagContainer& Tags);
+	UFUNCTION(BlueprintCallable)
+	bool CheckOwnedTags(const FGameplayTagContainer& Tags);
+
 
 // 내부용 함수
 private:

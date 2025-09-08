@@ -74,10 +74,9 @@ void UBTService_SearchTarget::TickNode(UBehaviorTreeComponent& OwnerComp, uint8*
 		TI->AddTargets(Targets);
 
 		// 가장 가까운 타겟 세팅
-		APawn* TargetPawn = CastChecked<APawn>(Targets[FirstIndex]);
+		APawn* TargetPawn = Cast<APawn>(Targets[FirstIndex]);
 		if (TargetPawn != nullptr && TargetPawn->GetController()->IsPlayerController() == true)
 		{
-
 			double Dist = FMath::Abs((Center - TargetPawn->GetActorLocation()).Size());		/* 절대 값으로 직접 계산한 방식 ... */ /* 그러나.. double로 값이 안나와서 다시 ... 계산 */
 			//double Dist = Target->GetDistanceTo(CurrentPawn);							/* 내장 함수로 계산하는게 나을듯 ... */
 			ERadiusType RadiusType = ERadiusType::Outside;

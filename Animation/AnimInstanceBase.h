@@ -15,6 +15,7 @@ DECLARE_MULTICAST_DELEGATE(FOnSkillPoint);
 DECLARE_MULTICAST_DELEGATE(FOnSkillEnd);
 DECLARE_MULTICAST_DELEGATE(FOnHitEnd);
 DECLARE_MULTICAST_DELEGATE(FOnStunEnd);
+DECLARE_MULTICAST_DELEGATE(FOnSprintEnd);
 DECLARE_MULTICAST_DELEGATE(FOnAnimEnd);
 DECLARE_MULTICAST_DELEGATE(FOnFootStep);
 
@@ -51,15 +52,7 @@ public:
 #pragma region Setter Function
 	FORCEINLINE void SetIsSprint(bool IsSprint) { m_IsSprint = IsSprint; }
 #pragma endregion
-	/*
-	void PlayBehaviorMontage(float PlaySpeed = 1.f);
-	void StopBehaviorMontage(float InBlendOutTime = 0.f);
-	void JumpToSection_Behavior(FName SectionName);
 
-	void PlayAttackMontage(float PlaySpeed = 1.f);
-	void StopAttackMontage(float InBlendOutTime = 0.f);
-	void JumpToSection_Attack(uint8 SectionIndex);
-	*/
 	void PlaySkillMontage(uint8 SkillIndex, float PlaySpeed = 1.f);
 	void StopSkillMontage(uint8 SkillIndex, float InBlendOutTime = 0.f);
 	void JumpToSection_Skill(uint8 SkillIndex, FName SectionName);
@@ -93,8 +86,10 @@ public:
 	FOnSkillEnd		m_OnSkillEnd;
 	FOnHitEnd		m_OnHitEnd;
 	FOnStunEnd		m_OnStunEnd;
+	FOnSprintEnd	m_OnSprintEnd;	
 	FOnAnimEnd		m_OnAnimEnd;
 	FOnFootStep		m_OnFootStep;
+
 #pragma endregion
 
 protected:
@@ -149,6 +144,8 @@ protected:
 	void AnimNotify_SkillEnd() { m_OnSkillEnd.Broadcast(); }
 	UFUNCTION()
 	void AnimNotify_HitEnd() { m_OnHitEnd.Broadcast(); }
+	UFUNCTION()
+	void AnimNotify_SprintEnd() { m_OnSprintEnd.Broadcast(); }
 	UFUNCTION()
 	void AnimNotify_StunEnd() { m_OnStunEnd.Broadcast(); }
 	UFUNCTION()

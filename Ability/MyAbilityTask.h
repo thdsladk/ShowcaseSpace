@@ -20,11 +20,22 @@ public:
     virtual void Cancel() {}
     virtual bool WantsTick() const { return false; }
 
+#pragma region Blueprint Functions
+//public:
+//    UFUNCTION(BlueprintNativeEvent, Category = "AbilityTask")
+//    void K2_Start(UMyAbilityInstance* Owner);
+//    UFUNCTION(BlueprintNativeEvent, Category = "AbilityTask")
+//    void K2_Tick(float DeltaTime);
+//    UFUNCTION(BlueprintNativeEvent, Category = "AbilityTask")
+//    void K2_Cancel();
+//    UFUNCTION(BlueprintNativeEvent, Category = "AbilityTask")
+//    bool K2_WantsTick() const;
+#pragma endregion
 
     DECLARE_MULTICAST_DELEGATE(FOnTaskCompleted);
     FOnTaskCompleted m_OnCompleted;
 protected:
-    UPROPERTY() 
+    UPROPERTY(VisibleAnywhere,BlueprintReadWrite,Category = "Owner")
     UMyAbilityInstance* m_pOwner = nullptr;
 
 };
