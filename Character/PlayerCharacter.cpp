@@ -29,7 +29,6 @@
 // Component Section
 #include "CharacterComponent/MyStatComponent.h"
 #include "CharacterComponent/MyInventoryComponent.h"
-#include "CharacterComponent/SkillComponent.h"
 #include "AbilityComponent.h"
 #include "Components/AudioComponent.h"
 
@@ -111,7 +110,7 @@ void APlayerCharacter::BeginPlay()
 			Widget->Initialize();
 			Widget->BindScreen1();
 			Widget->BindStatus(m_pStatComp);
-			Widget->BindSkill(m_pSkillComp);
+			Widget->BindAbility(m_pAbilityComp);
 		}
 
 		EnableInput(PC);
@@ -647,7 +646,7 @@ void APlayerCharacter::Click_F()
 
 void APlayerCharacter::Click_Q()
 {
-	m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_Q));
+	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_Q));
 }
 
 void APlayerCharacter::Click_W()

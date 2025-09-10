@@ -7,8 +7,11 @@
 #include "MyAbilityData.h"
 #include "AbilityComponent.generated.h"
 
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnAbillity, uint8);
-DECLARE_MULTICAST_DELEGATE_OneParam(FEndAbillity, uint8);
+//DECLARE_MULTICAST_DELEGATE_OneParam(FOnAbillity, uint8);
+//DECLARE_MULTICAST_DELEGATE_OneParam(FEndAbillity, uint8);
+
+//DECLARE_MULTICAST_DELEGATE_TwoParams(FEndCoolDown,FGameplayTag,double);
+
 
 class ACharacterBase;
 class UAnimInstanceBase;
@@ -85,6 +88,8 @@ public:
 	// Query
 	//UFUNCTION(BlueprintPure) 
 	bool IsOnCooldown(FGameplayTag CooldownTag) const;
+	//UFUNCTION(BlueprintPure)
+	double GetCooldownRatio(FGameplayTag CooldownTag) const;
 	//UFUNCTION(BlueprintPure) 
 	bool IsActive(FAbilityHandle Handle) const;
 	//UFUNCTION(BlueprintPure) 

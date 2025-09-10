@@ -126,6 +126,22 @@ bool UAbilityComponent::IsOnCooldown(FGameplayTag CooldownTag) const
     return false;
 }
 
+double UAbilityComponent::GetCooldownRatio(FGameplayTag CooldownTag) const
+{
+	const double* ExpireTime = m_CooldownsUTC.Find(CooldownTag);
+    if (*ExpireTime > 0.0)
+    {
+        return (FPlatformTime::Seconds() / *ExpireTime);
+
+    }
+    else
+    {
+        // Fail 
+        return -1.0;
+    }
+    
+}
+
 bool UAbilityComponent::IsActive(FAbilityHandle Handle) const
 {    // Actives 맵에 해당 핸들이 존재하고, 유효한 인스턴스가 있으면 true
     return m_Actives.Contains(Handle.Id);

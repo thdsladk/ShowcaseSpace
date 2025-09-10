@@ -153,6 +153,9 @@ protected:
 	void Release_Space();
 	void Release_Shift();
 	void Release_D();
+
+	// Skill
+	void Click_Skill(uint8 SkillNum);
 #pragma endregion
 	
 	bool PerformLineTrace();

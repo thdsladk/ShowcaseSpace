@@ -16,7 +16,6 @@
 #include "CharacterComponent/MyInventoryComponent.h"
 #include "CharacterComponent/MyEquipmentComponent.h"
 #include "CharacterComponent/MyStatComponent.h"
-#include "CharacterComponent/SkillComponent.h"
 #include "CharacterComponent\AbilityComponent.h"
 #include "Components/AudioComponent.h"
 
@@ -70,7 +69,7 @@ ACharacterBase::ACharacterBase()
 	//m_pStatComp = CreateDefaultSubobject<UMyStatComponent>(TEXT("StatComp"));
 	m_pInventoryComp = CreateDefaultSubobject<UMyInventoryComponent>(TEXT("Inventory"));
 	m_pEquipmentComp = CreateDefaultSubobject<UMyEquipmentComponent>(TEXT("Equip"));
-	m_pSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("Skill"));
+	//m_pSkillComp = CreateDefaultSubobject<USkillComponent>(TEXT("Skill"));
 	m_pAbilityComp = CreateDefaultSubobject<UAbilityComponent>(TEXT("Ability"));
 	m_pAudioComp = CreateDefaultSubobject<UAudioComponent>(TEXT("AudioComp"));
 	m_pAudioComp->bAutoActivate = false;  // 필요할 때만 Play
@@ -132,7 +131,7 @@ void ACharacterBase::PostInitializeComponents()
 	InitEquipment();
 
 	//Bind Section
-	m_pSkillComp->m_EndSkill.AddUObject(this, &ACharacterBase::SetState);
+	//m_pSkillComp->m_EndSkill.AddUObject(this, &ACharacterBase::SetState);
 
 	// 애님 인스턴스 불러오기 
 	m_pAnimInstance = Cast<UAnimInstanceBase>(GetMesh()->GetAnimInstance());

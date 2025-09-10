@@ -15,13 +15,16 @@
 #include "Character/CharacterBase.h"
 #include "AnimInstanceBase.h"
 #include "Interface/PlayerControllInterface.h"
-#include "SkillComponent.h"
+#include "AbilityComponent.h"
 
 #include "Interface/HighlightInterface.h"
 
 #include "MyHUD.h"
 #include "MyInventoryWidget.h"
 #include "StatWidget.h"
+
+// (임시) 스킬을 컨트롤러가 아는것이 맞는가 ?
+#include "Header/SkillEnum.h"
 
 
 AMyTest_TopDownPlayerController::AMyTest_TopDownPlayerController()
@@ -181,6 +184,13 @@ void AMyTest_TopDownPlayerController::BeginPlay()
 	// (임시) AnimInstanceBase를 컨트롤러에서 꺼내서 바인딩해도 되는가 ?
 	CastChecked<UAnimInstanceBase>(CharacterBase->GetMesh()->GetAnimInstance())->m_OnSprintEnd.AddUObject(this, &AMyTest_TopDownPlayerController::OnGamePlayControlReturned);
 
+	if (m_HUDState == EHUDState::EIngame)
+	{
+		if (m_CurrentWidget != nullptr)
+		{
+			CastChecked<UMyHUD>(m_CurrentWidget)->m_OnSkill.AddUObject(this, &AMyTest_TopDownPlayerController::Click_Skill);
+		}
+	}
 }
 
 void AMyTest_TopDownPlayerController::SetupInputComponent()
@@ -531,6 +541,35 @@ void AMyTest_TopDownPlayerController::Release_D()
 	// 제어 가능 만들기
 	m_bGamePlayControllable = true;
 
+}
+
+void AMyTest_TopDownPlayerController::Click_Skill(uint8 SkillNum)
+{
+	switch (static_cast<::ESkill>(SkillNum))
+	{
+		case ESkill::Skill_Q:
+		{
+			Click_Q();
+			break;
+		}
+		case ESkill::Skill_W:
+		{
+			Click_W();
+			break;
+		}
+		case ESkill::Skill_E:
+		{
+			Click_E();
+			break;
+		}
+		case ESkill::Skill_R:
+		{
+			Click_R();
+			break;
+		}
+		default:
+			break;
+	}
 }
 #pragma endregion
 

@@ -155,6 +155,8 @@ public:
 	FOnUpdateBehavior OnUpdateBehavior;
 	FOnChangeMode OnChangeMode;
 	FOnChangeCommand OnChangeCommand;
+
+
 #pragma endregion
 
 	// Effect
@@ -281,8 +283,8 @@ protected:
 	TObjectPtr<UMyInventoryComponent> m_pInventoryComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Component)
 	TObjectPtr<UMyEquipmentComponent> m_pEquipmentComp;
-	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Component)
-	TObjectPtr<USkillComponent> m_pSkillComp;
+	//UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Component)
+	//TObjectPtr<USkillComponent> m_pSkillComp;
 	UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = Component)
 
 	TObjectPtr<UAbilityComponent> m_pAbilityComp;
