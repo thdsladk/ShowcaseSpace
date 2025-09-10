@@ -6,11 +6,11 @@
 #include "Components/Button.h"
 #include "Components/Image.h"
 #include "MyStatComponent.h"
-#include "SkillComponent.h"
+#include "AbilityComponent.h"
 #include "MyTest_TopDownPlayerController.h"
 #include "SlotWidget.h"
 #include "Data/MyGameSubsystem.h"
-#include "Header/SkillEnum.h"
+
 
 constexpr float FullPercent = 1.0f;
 constexpr float EmptyPercent = 0.0f;
@@ -36,12 +36,17 @@ bool UMyHUD::Initialize()
 	GetWorld()->GetTimerManager().SetTimer(m_StatSync, this, &UMyHUD::Update_StatRatioSync, 0.1f, true);
 	m_TimerSkillCoolDown.Init(FTimerHandle(),static_cast<int32>(ESkill::End));
 
+	// (임시) 하드 코딩으로 들어가 있다 어빌리티들이... 
+	//m_SkillTag.Add(ESkill::Skill_Q, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.Q")));
+	m_SkillTag.Add(ESkill::Skill_W, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.StormKill")));
+	m_SkillTag.Add(ESkill::Skill_E, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.FireBall")));
+	m_SkillTag.Add(ESkill::Skill_R, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.WaterBall")));
+
 	return Result;
 }
 
 void UMyHUD::BindStatus(UMyStatComponent* StatComp)
 {
-	//m_pStatComp = StatComp;
 	StatComp->OnHPChanged.AddUObject(this, &UMyHUD::UpdateHP);
 	StatComp->OnMPChanged.AddUObject(this, &UMyHUD::UpdateMP);
 	StatComp->OnSPChanged.AddUObject(this, &UMyHUD::UpdateSP);
@@ -119,25 +124,29 @@ void UMyHUD::Update_StatRatioSync()
 	}
 }
 
-void UMyHUD::BindSkill(USkillComponent* SkillComp)
+void UMyHUD::BindAbility(UAbilityComponent* AbilityComp)
 {
-	Btn_Skill1->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtnQ);
-	Btn_Skill2->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtnW);
-	Btn_Skill3->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtnE);
-	Btn_Skill4->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtnR);
+	if (AbilityComp != nullptr)
+	{
+		m_pAbilityComp = AbilityComp;
+	}
 
-	Btn_Skill1->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnQ);
-	Btn_Skill2->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnW);
-	Btn_Skill3->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnE);
-	Btn_Skill4->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnR);
+	Btn_Skill1->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtn_Skill1);
+	Btn_Skill2->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtn_Skill2);
+	Btn_Skill3->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtn_Skill3);
+	Btn_Skill4->OnClicked.AddDynamic(this, &UMyHUD::UpdateBtn_Skill4);
+
+	Btn_Skill1->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnSkill1);
+	Btn_Skill2->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnSkill2);
+	Btn_Skill3->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnSkill3);
+	Btn_Skill4->OnReleased.AddDynamic(this, &UMyHUD::ReleaseBtnSkill4);
 
 
-	//Btn_OpenChest->OnClicked.AddDynamic(this, &UMyHUD::Click_Tab);
 	Btn_OpenChest->OnReleased.AddDynamic(this, &UMyHUD::Click_Tab);
 
-	SkillComp->m_OnSkill.AddUObject(this, &UMyHUD::ReleaseBtn);
 
 	UMyGameSubsystem* SubSystem = GetWorld()->GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
+
 	if (SubSystem != nullptr)
 	{
 		m_SkillUIData.Init(FSkillUIData{}, static_cast<int32>(ESkill::End));
@@ -148,13 +157,12 @@ void UMyHUD::BindSkill(USkillComponent* SkillComp)
 			m_SkillUIData[i].CoolDown = SkillData->CoolDown;
 			m_SkillUIData[i].ChargeCount = 0;
 			m_SkillUIData[i].UIState = static_cast<uint8>(ESKillUIState::Enable);
-
+	
 		}
-
-
+	
 		// (임시) 스킬을 테이블정보로 세팅하는것에 대하여 고민중... 버튼이라서...
 		const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_Q));
-
+	
 		//FButtonStyle Style = Btn_Skill1->WidgetStyle;
 		FSlateBrush Brush;
 		Brush.SetResourceObject(SkillData->Icon);
@@ -163,33 +171,31 @@ void UMyHUD::BindSkill(USkillComponent* SkillComp)
 		Btn_Skill1->WidgetStyle.SetPressed(Brush);
 		Btn_Skill1->WidgetStyle.SetDisabled(Brush);
 		//Btn_Skill1->SetStyle(Style);
-
+	
 	}
-
-
 }
 
-void UMyHUD::UpdateBtnQ()
+void UMyHUD::UpdateBtn_Skill1()
 {
 	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_Q));
 }
 
-void UMyHUD::UpdateBtnW()
+void UMyHUD::UpdateBtn_Skill2()
 {
 	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_W));
 }
 
-void UMyHUD::UpdateBtnE()
+void UMyHUD::UpdateBtn_Skill3()
 {
 	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_E));
 }
 
-void UMyHUD::UpdateBtnR()
+void UMyHUD::UpdateBtn_Skill4()
 {
 	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_R));
 }
 
-void UMyHUD::ReleaseBtnQ()
+void UMyHUD::ReleaseBtnSkill1()
 {
 	// 여기서 쿨다운 처리.
 	if (BtnSkillCoolDown1 != nullptr)
@@ -200,14 +206,14 @@ void UMyHUD::ReleaseBtnQ()
 		{
 			ProgressBar_Skill1->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)],this, &UMyHUD::TimerBtnQ, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)],this, &UMyHUD::TimerBtnSkill1, CoolDownTimerRate, true);
 		}
 		
 	}
 
 }
 
-void UMyHUD::ReleaseBtnW()
+void UMyHUD::ReleaseBtnSkill2()
 {
 	// 여기서 쿨다운 처리.
 	if (BtnSkillCoolDown2 != nullptr)
@@ -218,13 +224,13 @@ void UMyHUD::ReleaseBtnW()
 		{
 			ProgressBar_Skill2->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)], this, &UMyHUD::TimerBtnW, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)], this, &UMyHUD::TimerBtnSkill2, CoolDownTimerRate, true);
 		}
 
 	}
 }
 
-void UMyHUD::ReleaseBtnE()
+void UMyHUD::ReleaseBtnSkill3()
 {
 	// 여기서 쿨다운 처리.
 	if (BtnSkillCoolDown3 != nullptr)
@@ -235,13 +241,13 @@ void UMyHUD::ReleaseBtnE()
 		{
 			ProgressBar_Skill3->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)], this, &UMyHUD::TimerBtnE, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)], this, &UMyHUD::TimerBtnSkill3, CoolDownTimerRate, true);
 		}
 
 	}
 }
 
-void UMyHUD::ReleaseBtnR()
+void UMyHUD::ReleaseBtnSkill4()
 {
 	// 여기서 쿨다운 처리.
 	if (BtnSkillCoolDown4 != nullptr)
@@ -252,7 +258,7 @@ void UMyHUD::ReleaseBtnR()
 		{
 			ProgressBar_Skill4->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)], this, &UMyHUD::TimerBtnR, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)], this, &UMyHUD::TimerBtnSkill4, CoolDownTimerRate, true);
 		}
 
 	}
@@ -262,24 +268,24 @@ void UMyHUD::ReleaseBtn(uint8 Btn)
 {
 	switch (static_cast<ESkill>(Btn))
 	{
-	case ESkill::Skill_Q	:
+	case ESkill::Skill_Q:
 	{
-		ReleaseBtnQ();
+		ReleaseBtnSkill1();
 		break;
 	}
 	case ESkill::Skill_W:
 	{
-		ReleaseBtnW();
+		ReleaseBtnSkill2();
 		break;
 	}
 	case ESkill::Skill_E:
 	{
-		ReleaseBtnE();
+		ReleaseBtnSkill3();
 		break;
 	}
 	case ESkill::Skill_R:
 	{
-		ReleaseBtnR();
+		ReleaseBtnSkill4();
 		break;
 	}
 
@@ -288,87 +294,79 @@ void UMyHUD::ReleaseBtn(uint8 Btn)
 	}
 }
 
-void UMyHUD::TimerBtnQ()
+void UMyHUD::TimerBtnSkill1()
 {
-	double& CoolDown = m_SkillUIData[static_cast<int32>(ESkill::Skill_E)].CoolDown;
-	if (CoolDown <= 0.0)
+	// 0~1 사이의 값이 온다.
+	double Time = m_pAbilityComp->GetCooldownRatio(m_SkillTag[ESkill::Skill_Q]);
+
+
+	if (Time >= 1.0)
 	{
-		UMyGameSubsystem* SubSystem = GetWorld()->GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
-		if (SubSystem != nullptr)
-		{
-			const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_E));
-			CoolDown = SkillData->CoolDown;
-		}
-		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)]);
+		ProgressBar_Skill1->SetPercent(1.0 - Time);
+
+		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)]);
 		StopAnimation(BtnSkillCoolDown1);
 	}
 	else
 	{
-		CoolDown -= CoolDownTimerRate;
-		ProgressBar_Skill1->SetPercent(CoolDown);
+		ProgressBar_Skill1->SetPercent(1.0 - Time);
 	}
 }
 
-void UMyHUD::TimerBtnW()
+void UMyHUD::TimerBtnSkill2()
 {
-	double& CoolDown = m_SkillUIData[static_cast<int32>(ESkill::Skill_W)].CoolDown;
-	if (CoolDown <= 0.0)
+	// 0~1 사이의 값이 온다.
+	double Time = m_pAbilityComp->GetCooldownRatio(m_SkillTag[ESkill::Skill_W]);
+
+
+	if (Time >= 1.0)
 	{
-		UMyGameSubsystem* SubSystem = GetWorld()->GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
-		if (SubSystem != nullptr)
-		{
-			const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_W));
-			CoolDown = SkillData->CoolDown;
-		}
+		ProgressBar_Skill2->SetPercent(1.0 - Time);
+
 		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)]);
 		StopAnimation(BtnSkillCoolDown2);
 	}
 	else
 	{
-		CoolDown -= CoolDownTimerRate;
-		ProgressBar_Skill2->SetPercent(CoolDown);
+		ProgressBar_Skill2->SetPercent(1.0 - Time);
 	}
 }
 
-void UMyHUD::TimerBtnE()
+void UMyHUD::TimerBtnSkill3()
 {
-	double& CoolDown = m_SkillUIData[static_cast<int32>(ESkill::Skill_E)].CoolDown;
-	if (CoolDown <= 0.0)
+	// 0~1 사이의 값이 온다.
+	double Time = m_pAbilityComp->GetCooldownRatio(m_SkillTag[ESkill::Skill_E]);
+
+
+	if (Time >= 1.0)
 	{
-		UMyGameSubsystem* SubSystem = GetWorld()->GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
-		if (SubSystem != nullptr)
-		{
-			const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_E));
-			CoolDown = SkillData->CoolDown;
-		}
+		ProgressBar_Skill3->SetPercent(1.0 - Time);
+
 		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)]);
 		StopAnimation(BtnSkillCoolDown3);
 	}
 	else
 	{
-		CoolDown -= CoolDownTimerRate;
-		ProgressBar_Skill3->SetPercent(CoolDown);
+		ProgressBar_Skill3->SetPercent(1.0 - Time);
 	}
 }
 
-void UMyHUD::TimerBtnR()
+void UMyHUD::TimerBtnSkill4()
 {
-	double& CoolDown = m_SkillUIData[static_cast<int32>(ESkill::Skill_R)].CoolDown;
-	if (CoolDown <= 0.0)
+	// 0~1 사이의 값이 온다.
+	double Time = m_pAbilityComp->GetCooldownRatio(m_SkillTag[ESkill::Skill_R]);
+
+
+	if (Time >= 1.0)
 	{
-		UMyGameSubsystem* SubSystem = GetWorld()->GetGameInstance()->GetSubsystem<UMyGameSubsystem>();
-		if (SubSystem != nullptr)
-		{
-			const FSkillData* SkillData = SubSystem->GetSkillData(static_cast<int32>(ESkill::Skill_R));
-			CoolDown = SkillData->CoolDown;
-		}
+		ProgressBar_Skill4->SetPercent(1.0 - Time);
+
 		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)]);
 		StopAnimation(BtnSkillCoolDown4);
 	}
 	else
 	{
-		CoolDown -= CoolDownTimerRate;
-		ProgressBar_Skill4->SetPercent(CoolDown);
+		ProgressBar_Skill4->SetPercent(1.0 - Time);
 	}
 }
 

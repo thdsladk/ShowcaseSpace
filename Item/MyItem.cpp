@@ -25,6 +25,7 @@ AMyItem::AMyItem()
 	//	m_EquipmentMeshComp = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("EquipmentMesh"));
 	//	m_EquipmentMeshComp->SetupAttachment(RootComponent);
 	//}
+	
 }
 
 void AMyItem::BeginPlay()
@@ -48,57 +49,52 @@ void AMyItem::PostInitializeComponents()
 
 void AMyItem::InitItem()
 {
-	if (m_DataTableRowHandle.IsNull() == true)
-		return;
-
-
-	FString ContextStr = GetName() + TEXT("_") + m_DataTableRowHandle.RowName.ToString();
-
-
-
-	if (const FItemData* FoundRow = m_DataTableRowHandle.GetRow<FItemData>(ContextStr))
+	// 1. RowHandle이 비어있으면 리턴
+	if (m_DataTableRowHandle.IsNull())
 	{
-		m_ItemInfo.ItemStaticData = *FoundRow;
+		UE_LOG(LogTemp, Warning, TEXT("DataTableRowHandle is null in %s"), *GetName());
+		return;
 	}
-	else
+
+	// 2. Row 데이터 가져오기
+	const FString ContextStr = GetName() + TEXT("_") + m_DataTableRowHandle.RowName.ToString();
+	const FItemData* FoundRow = m_DataTableRowHandle.GetRow<FItemData>(ContextStr);
+
+	if (FoundRow == nullptr)
 	{
 		UE_LOG(LogTemp, Warning, TEXT("Row not found: %s"), *m_DataTableRowHandle.RowName.ToString());
+		return;
 	}
 
-	// m_ItemInfo.Count 는 에디터에서 넣어주자. 
+	// 3. 아이템 기본 데이터 세팅
+	m_ItemInfo.ItemStaticData = *FoundRow;
 
+	// m_ItemInfo.Count 는 에디터에서 직접 세팅
+
+	// 4. 타입별 메시 로딩
 	switch (m_ItemInfo.ItemStaticData.Type)
 	{
 	case static_cast<int32>(EItemType::EquipmentItem):
 	{
-		// 스켈레탈 메쉬 생성과정 [ 직접 경로 만들어서 붙여 주는중 ] 
-		if (m_ItemInfo.ItemStaticData.EquipmentMesh.IsValid() == false)
+		// 스켈레탈 메시 로딩 (SoftObjectPtr 사용)
+		if (m_ItemInfo.ItemStaticData.EquipmentMesh.IsNull() == false)
 		{
-			m_ItemInfo.ItemStaticData.EquipmentMesh.LoadSynchronous();
-		}
-		FString Path = m_ItemInfo.ItemStaticData.EquipmentMesh->GetPathName();
-		USkeletalMesh* SkeletalMesh = LoadObject<USkeletalMesh>(NULL, *(Path), NULL, LOAD_None, NULL);
-
-		if (SkeletalMesh != nullptr)
-		{
-			// 필요한 경우만 생성해서 쓰도록 
-			if (m_EquipmentMeshComp == nullptr)
+			USkeletalMesh* SkeletalMesh = m_ItemInfo.ItemStaticData.EquipmentMesh.LoadSynchronous();
+			if (SkeletalMesh != nullptr)
 			{
-				// 1. NewObject로 생성
-				m_EquipmentMeshComp = NewObject<USkeletalMeshComponent>(this, USkeletalMeshComponent::StaticClass(), TEXT("EquipmentMesh_Runtime"));
-				// 2. 액터에 컴포넌트 소유권 부여
-				AddInstanceComponent(m_EquipmentMeshComp);
-				// 3. 어태치 설정
-				m_EquipmentMeshComp->SetupAttachment(RootComponent);
-				// 4. 월드에 등록 (렌더/틱/물리 반영 시작)
-				m_EquipmentMeshComp->RegisterComponent();
+				if (m_EquipmentMeshComp == nullptr)
+				{
+					m_EquipmentMeshComp = NewObject<USkeletalMeshComponent>(this, TEXT("EquipmentMesh_Runtime"));
+					AddInstanceComponent(m_EquipmentMeshComp);
+					m_EquipmentMeshComp->SetupAttachment(RootComponent);
+					m_EquipmentMeshComp->RegisterComponent();
+				}
+
+				m_EquipmentMeshComp->SetSkeletalMesh(SkeletalMesh);
+				m_EquipmentMeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+				m_EquipmentMeshComp->SetSimulatePhysics(true);
+				m_EquipmentMeshComp->SetWorldScale3D(m_EquipmentMeshComp->GetComponentScale() * m_ItemInfo.ItemStaticData.Scale);
 			}
-
-			m_EquipmentMeshComp->SetSkeletalMesh(SkeletalMesh);
-			m_EquipmentMeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
-			m_EquipmentMeshComp->SetSimulatePhysics(true);
-			m_EquipmentMeshComp->SetWorldScale3D(m_EquipmentMeshComp->GetComponentScale() * m_ItemInfo.ItemStaticData.Scale);	// 스케일 두배로.
-
 		}
 		break;
 	}
@@ -106,29 +102,27 @@ void AMyItem::InitItem()
 	case static_cast<int32>(EItemType::Non_ConsumableItem):
 	case static_cast<int32>(EItemType::EtcItem):
 	{
-		// 스테틱 메쉬 생성과정 [ 직접 경로 만들어서 붙여 주는중 ] 
-		UStaticMesh* StaticMesh = LoadObject<UStaticMesh>(NULL, *m_ItemInfo.ItemStaticData.ItemMesh->GetPathName(), NULL, LOAD_None, NULL);
-
-		if (StaticMesh != nullptr)
+		// 스태틱 메시 로딩 (SoftObjectPtr 사용)
+		if (!m_ItemInfo.ItemStaticData.ItemMesh.IsNull())
 		{
-			m_MeshComp->SetStaticMesh(StaticMesh);
-			//m_MeshComp->SetCollisionProfileName(TEXT("NoCollision"));
-			m_MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
-			m_MeshComp->SetSimulatePhysics(true);
-			m_MeshComp->SetWorldScale3D(m_MeshComp->GetComponentScale() * m_ItemInfo.ItemStaticData.Scale);	// 스케일 두배로.
+			UStaticMesh* StaticMesh = m_ItemInfo.ItemStaticData.ItemMesh.LoadSynchronous();
+			if (StaticMesh != nullptr && m_MeshComp != nullptr )
+			{
+				m_MeshComp->SetStaticMesh(StaticMesh);
+				m_MeshComp->SetCollisionProfileName(TEXT("PhysicsActor"));
+				m_MeshComp->SetSimulatePhysics(true);
+				m_MeshComp->SetWorldScale3D(m_MeshComp->GetComponentScale() * m_ItemInfo.ItemStaticData.Scale);
+			}
 		}
 		break;
 	}
 	default:
-	{
-		// NullItem, End 일때는 실패를 띄우자.
+		UE_LOG(LogTemp, Warning, TEXT("Invalid item type in %s"), *GetName());
 		return;
 	}
-	}
 
-	// 설명서 추가하기 . [ 아이템이 다 세팅된 다음에 해야한다.
+	// 5. 상호작용 안내 문구
 	m_InteractableHelpText = FString::Printf(TEXT("%s : Press F to Pick up "), *m_ItemInfo.ItemStaticData.Name);
-
 }
 
 void AMyItem::SetItem(int32 ID, uint8 Count)

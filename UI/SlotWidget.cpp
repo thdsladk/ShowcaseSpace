@@ -14,6 +14,7 @@
 #include "Character/MyTest_TopDownPlayerController.h"
 #include "UI/MyInventoryWidget.h"
 #include "Interface/InventoryInterface.h"
+#include "Interface/BehaviorInterface.h"
 #include "CharacterComponent/MyInventoryComponent.h"
 
 // define 
@@ -161,6 +162,20 @@ FReply USlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
         {
             // 아이템 슬롯 좌클릭은 아직 아무것도 없다.
         }
+        else if( m_SlotType == ESlotType::QuickSlot)
+        {
+            // 퀵슬롯 좌클릭은 아직 아무것도 없다.
+		}
+        else if (m_SlotType == ESlotType::SkillSlot)
+        {
+            // 스킬슬롯 좌클릭은 아직 아무것도 없다.
+            //APawn* Pawn = GetWorld()->GetFirstPlayerController()->GetPawn();
+            //if(Pawn != nullptr)
+            //{
+            //    IBehaviorInterface* BI = CastChecked<IBehaviorInterface>(Pawn);
+            //    BI->UseSkill(m_SlotIndex);
+			//}
+        }
         //Debug
         GEngine->AddOnScreenDebugMessage(-1, 3.f, FColor::Yellow, TEXT("Drag : Left Button Up"));
     }
@@ -180,6 +195,14 @@ FReply USlotWidget::NativeOnMouseButtonUp(const FGeometry& InGeometry, const FPo
             //    CastChecked<IInventoryInterface>(Pawn)->DropItem(m_SlotIndex, {Pawn->GetTransform().GetLocation() + FVector(0.0, 0.0, 10.0)});
             //    
             //}
+        }
+        else if (m_SlotType == ESlotType::QuickSlot)
+        {
+            // 퀵슬롯 우클릭은 아직 아무것도 없다.
+        }
+        else if (m_SlotType == ESlotType::SkillSlot)
+        {
+            // 스킬슬롯 우클릭은 아직 아무것도 없다.
         }
 
         UpdateWidget();

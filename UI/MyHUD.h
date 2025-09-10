@@ -4,7 +4,9 @@
 
 #include "CoreMinimal.h"
 #include "Blueprint/UserWidget.h"
+#include "Header/SkillEnum.h"
 #include "Header/DataStruct.h"
+#include "GameplayTagContainer.h"
 #include "MyHUD.generated.h"
 
 DECLARE_MULTICAST_DELEGATE_OneParam(FOnSkill, uint8);
@@ -14,6 +16,10 @@ class UProgressBar;
 class UTextBlock;
 class UButton;
 class USlotWidget;
+
+class UMyStatComponent;
+class UAbilityComponent;
+
 
 /**
  * 
@@ -29,8 +35,8 @@ public:
 
 public:
 
-	void BindStatus(class UMyStatComponent* StatComp);
-	void BindSkill(class USkillComponent* SkillComp);
+	void BindStatus(UMyStatComponent* StatComp);
+	void BindAbility(UAbilityComponent* AbilityComp);
 	
 	void UpdateHP(float Hp);
 	void UpdateMP(float Mp);
@@ -38,31 +44,32 @@ public:
 
 	void Update_StatRatioSync();
 
+public:
+	UFUNCTION()
+	void UpdateBtn_Skill1();
+	UFUNCTION()
+	void UpdateBtn_Skill2();
+	UFUNCTION()
+	void UpdateBtn_Skill3();
+	UFUNCTION()
+	void UpdateBtn_Skill4();
 
 	UFUNCTION()
-	void UpdateBtnQ();
+	void ReleaseBtnSkill1();
 	UFUNCTION()
-	void UpdateBtnW();
+	void ReleaseBtnSkill2();
 	UFUNCTION()
-	void UpdateBtnE();
+	void ReleaseBtnSkill3();
 	UFUNCTION()
-	void UpdateBtnR();
-
-	UFUNCTION()
-	void ReleaseBtnQ();
-	UFUNCTION()
-	void ReleaseBtnW();
-	UFUNCTION()
-	void ReleaseBtnE();
-	UFUNCTION()
-	void ReleaseBtnR();
+	void ReleaseBtnSkill4();
 	UFUNCTION()
 	void ReleaseBtn(uint8 Btn);
 
-	void TimerBtnQ();
-	void TimerBtnW();
-	void TimerBtnE();
-	void TimerBtnR();
+	void TimerBtnSkill1();
+	void TimerBtnSkill2();
+	void TimerBtnSkill3();
+	void TimerBtnSkill4();
+
 
 
 
@@ -72,13 +79,17 @@ public:
 	void BindScreen1();
 	void UpDateScreen1(float Hp);
 
+
+#pragma region Delegate Section
+public:
 	FOnSkill m_OnSkill;
 	FOnInventory m_OnInven;
+#pragma endregion
 
+#pragma region Gauge Section
 private:
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_HP;
-
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* ProgressBar_HP;
 	UPROPERTY(meta = (BindWidget))
@@ -86,7 +97,6 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_MP;
-
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* ProgressBar_MP;
 	UPROPERTY(meta = (BindWidget))
@@ -94,14 +104,13 @@ private:
 
 	UPROPERTY(meta = (BindWidget))
 	UTextBlock* Text_SP;
-	
-
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* ProgressBar_SP;
 	UPROPERTY(meta = (BindWidget))
 	UProgressBar* ProgressBar_BackGroundSP;
+#pragma endregion
 
-
+private:
 	// Button Widget Skill
 
 	UPROPERTY(meta = (BindWidget))
@@ -166,25 +175,15 @@ private:
 	UWidgetAnimation* BtnSkillCoolDown4;
 
 
+private:
 	// Timer 
 	FTimerHandle m_Timer_Screen1;
 	FTimerHandle m_StatSync;
 	TArray<FTimerHandle> m_TimerSkillCoolDown;
 
-private:		
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_PreHpRatio = 1.0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_PreMpRatio = 1.0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_PreSpRatio = 1.0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_CurrentHpRatio = 1.0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_CurrentMpRatio = 1.0;
-	//UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
-	//double m_CurrentSpRatio = 1.0;
 
+
+private:		
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
 	FStatVector m_PreStatRatio;
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, meta = (AllowPrivateAccess = "true"))
@@ -194,5 +193,9 @@ private:
 	TArray<FSkillUIData> m_SkillUIData;
 
 
+	TMap<ESkill,FGameplayTag> m_SkillTag;
+	// (임시) 컴포넌트를 임시로 들고있자 
+	TWeakObjectPtr<UAbilityComponent> m_pAbilityComp = nullptr;
+	
 	
 };

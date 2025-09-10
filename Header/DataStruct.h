@@ -500,32 +500,8 @@ public:
 #pragma endregion
 
 #pragma region Ability Info
-/* 선언되어 있을것 같다 . 
-struct FGameplayTag
-{
-private:
-	FName TagName;       // "Ability.Attack.Light"
-	int32 TagIndex;      // 내부 레지스트리 인덱스
-public:
-	static FGameplayTag RequestGameplayTag(FName TagName);
-	bool MatchesTag(FGameplayTag Other) const;
-	bool MatchesTagExact(FGameplayTag Other) const;
-	FName GetTagName() const { return TagName; }
-};
 
-struct FGameplayTagContainer
-{
-private:
-	TArray<FGameplayTag> GameplayTags; // 직접 보유 태그
-	TArray<FGameplayTag> ParentTags;   // 상위 계층 태그 캐시
-public:
-	bool HasTag(FGameplayTag Tag, bool bExact) const;
-	bool HasAny(const FGameplayTagContainer& Other, bool bExact) const;
-	bool HasAll(const FGameplayTagContainer& Other, bool bExact) const;
-	void AddTag(FGameplayTag Tag);
-	void RemoveTag(FGameplayTag Tag);
-};
-*/
+
 #pragma endregion
 
 #pragma region Test Code
