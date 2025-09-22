@@ -34,13 +34,16 @@ bool UMyHUD::Initialize()
 	Btn_Item6->Initialize();
 
 	GetWorld()->GetTimerManager().SetTimer(m_StatSync, this, &UMyHUD::Update_StatRatioSync, 0.1f, true);
-	m_TimerSkillCoolDown.Init(FTimerHandle(),static_cast<int32>(ESkill::End));
+	m_TimerSkillCoolDown.Add(ESkill::Skill_Q, FTimerHandle());
+	m_TimerSkillCoolDown.Add(ESkill::Skill_W, FTimerHandle());
+	m_TimerSkillCoolDown.Add(ESkill::Skill_E, FTimerHandle());
+	m_TimerSkillCoolDown.Add(ESkill::Skill_R, FTimerHandle());
 
 	// (임시) 하드 코딩으로 들어가 있다 어빌리티들이... 
 	//m_SkillTag.Add(ESkill::Skill_Q, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.Q")));
-	m_SkillTag.Add(ESkill::Skill_W, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.StormKill")));
-	m_SkillTag.Add(ESkill::Skill_E, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.FireBall")));
-	m_SkillTag.Add(ESkill::Skill_R, FGameplayTag::RequestGameplayTag(FName("Ability.Skill.WaterBall")));
+	m_SkillTag.Add(ESkill::Skill_W, FGameplayTag::RequestGameplayTag(FName("Cooldown.Skill.StormKill")));
+	m_SkillTag.Add(ESkill::Skill_E, FGameplayTag::RequestGameplayTag(FName("Cooldown.Skill.FireBall")));
+	m_SkillTag.Add(ESkill::Skill_R, FGameplayTag::RequestGameplayTag(FName("Cooldown.Skill.WaterBall")));
 
 	return Result;
 }
@@ -177,22 +180,22 @@ void UMyHUD::BindAbility(UAbilityComponent* AbilityComp)
 
 void UMyHUD::UpdateBtn_Skill1()
 {
-	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_Q));
+	m_OnSkill.Broadcast(static_cast<uint8>(ESkill::Skill_Q));
 }
 
 void UMyHUD::UpdateBtn_Skill2()
 {
-	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_W));
+	m_OnSkill.Broadcast(static_cast<uint8>(ESkill::Skill_W));
 }
 
 void UMyHUD::UpdateBtn_Skill3()
 {
-	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_E));
+	m_OnSkill.Broadcast(static_cast<uint8>(ESkill::Skill_E));
 }
 
 void UMyHUD::UpdateBtn_Skill4()
 {
-	m_OnSkill.Broadcast(static_cast<int32>(ESkill::Skill_R));
+	m_OnSkill.Broadcast(static_cast<uint8>(ESkill::Skill_R));
 }
 
 void UMyHUD::ReleaseBtnSkill1()
@@ -202,11 +205,11 @@ void UMyHUD::ReleaseBtnSkill1()
 	{
 		PlayAnimation(BtnSkillCoolDown1, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f);
 		
-		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)]) == false)
+		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[ESkill::Skill_Q]) == false)
 		{
 			ProgressBar_Skill1->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)],this, &UMyHUD::TimerBtnSkill1, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[ESkill::Skill_Q],this, &UMyHUD::TimerBtnSkill1, CoolDownTimerRate, true, CoolDownTimerRate);
 		}
 		
 	}
@@ -220,11 +223,11 @@ void UMyHUD::ReleaseBtnSkill2()
 	{
 		PlayAnimation(BtnSkillCoolDown2, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f);
 
-		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)]) == false)
+		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[ESkill::Skill_W]) == false)
 		{
 			ProgressBar_Skill2->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)], this, &UMyHUD::TimerBtnSkill2, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[ESkill::Skill_W], this, &UMyHUD::TimerBtnSkill2, CoolDownTimerRate, true, CoolDownTimerRate);
 		}
 
 	}
@@ -237,11 +240,11 @@ void UMyHUD::ReleaseBtnSkill3()
 	{
 		PlayAnimation(BtnSkillCoolDown3, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f);
 
-		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)]) == false)
+		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[ESkill::Skill_E]) == false)
 		{
 			ProgressBar_Skill3->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)], this, &UMyHUD::TimerBtnSkill3, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[ESkill::Skill_E], this, &UMyHUD::TimerBtnSkill3, CoolDownTimerRate, true, CoolDownTimerRate);
 		}
 
 	}
@@ -254,11 +257,11 @@ void UMyHUD::ReleaseBtnSkill4()
 	{
 		PlayAnimation(BtnSkillCoolDown4, 0.f, 1, EUMGSequencePlayMode::Forward, 1.f);
 
-		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)]) == false)
+		if (GetWorld()->GetTimerManager().IsTimerActive(m_TimerSkillCoolDown[ESkill::Skill_R]) == false)
 		{
 			ProgressBar_Skill4->SetPercent(FullPercent);
 			// CoolDown Start
-			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)], this, &UMyHUD::TimerBtnSkill4, CoolDownTimerRate, true);
+			GetWorld()->GetTimerManager().SetTimer(m_TimerSkillCoolDown[ESkill::Skill_R], this, &UMyHUD::TimerBtnSkill4, CoolDownTimerRate, true, CoolDownTimerRate);
 		}
 
 	}
@@ -304,7 +307,7 @@ void UMyHUD::TimerBtnSkill1()
 	{
 		ProgressBar_Skill1->SetPercent(1.0 - Time);
 
-		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_Q)]);
+		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[(ESkill::Skill_Q)]);
 		StopAnimation(BtnSkillCoolDown1);
 	}
 	else
@@ -323,7 +326,7 @@ void UMyHUD::TimerBtnSkill2()
 	{
 		ProgressBar_Skill2->SetPercent(1.0 - Time);
 
-		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_W)]);
+		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[(ESkill::Skill_W)]);
 		StopAnimation(BtnSkillCoolDown2);
 	}
 	else
@@ -342,7 +345,7 @@ void UMyHUD::TimerBtnSkill3()
 	{
 		ProgressBar_Skill3->SetPercent(1.0 - Time);
 
-		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_E)]);
+		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[(ESkill::Skill_E)]);
 		StopAnimation(BtnSkillCoolDown3);
 	}
 	else
@@ -361,7 +364,7 @@ void UMyHUD::TimerBtnSkill4()
 	{
 		ProgressBar_Skill4->SetPercent(1.0 - Time);
 
-		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[static_cast<int32>(ESkill::Skill_R)]);
+		GetWorld()->GetTimerManager().ClearTimer(m_TimerSkillCoolDown[(ESkill::Skill_R)]);
 		StopAnimation(BtnSkillCoolDown4);
 	}
 	else

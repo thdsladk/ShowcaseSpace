@@ -179,7 +179,7 @@ private:
 	// Timer 
 	FTimerHandle m_Timer_Screen1;
 	FTimerHandle m_StatSync;
-	TArray<FTimerHandle> m_TimerSkillCoolDown;
+	TMap<ESkill,FTimerHandle> m_TimerSkillCoolDown;
 
 
 

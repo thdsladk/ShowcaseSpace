@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UObject/Interface.h"
+#include "InputActionValue.h"
 #include "PlayerControllInterface.generated.h"
 
 // This class does not need to be modified.
@@ -43,5 +44,8 @@ public:
 	virtual void Release_Space() = 0;
 	virtual void Release_Shift() = 0;
 	virtual void ClickRMouse() = 0;
+
+	virtual void Keyboard_Move(const FInputActionValue& Value) = 0;
+	virtual void Look(const FInputActionValue& Value) = 0;
 
 };
