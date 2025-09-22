@@ -78,6 +78,7 @@ public:
 	// Movement Function (override)
 	virtual void MoveToForward(float Value = 1.f)override;
 	virtual void MoveToRight(float Value = 1.f)override;
+	void MoveToDirection2D(const FVector2D& Direction);
 
 	virtual	void Sprint(float WalkSpeedRatio = 2.f, float CameraSpeedRatio = 2.f, bool HasState = true)override;
 	virtual	void SetSprint(float WalkSpeed, float CameraSpeed = 1.f, bool HasState = true)override;
@@ -129,6 +130,10 @@ public:
 	virtual void Release_Space()override;
 	virtual void Release_Shift()override;
 	virtual void ClickRMouse()override;
+
+	virtual void Keyboard_Move(const FInputActionValue& Value)override;
+	virtual void Look(const FInputActionValue& Value)override;
+
 #pragma endregion
 
 public:

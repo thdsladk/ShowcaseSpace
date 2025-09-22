@@ -239,6 +239,9 @@ void AMyTest_TopDownPlayerController::SetupInputComponent()
 		EIComp->BindAction(SetDestKeyAction[EKeys::SpaceBar], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Space);
 		EIComp->BindAction(SetDestKeyAction[EKeys::LeftShift], ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Click_Shift);
 		EIComp->BindAction(SetDestKeyAction[EKeys::LeftShift], ETriggerEvent::Completed, this, &AMyTest_TopDownPlayerController::Release_Shift);
+		
+		// Setup MoveKet evnents
+		EIComp->BindAction(MoveKeyAction, ETriggerEvent::Triggered, this, &AMyTest_TopDownPlayerController::Move);
 
 	}
 
@@ -543,6 +546,14 @@ void AMyTest_TopDownPlayerController::Release_D()
 
 }
 
+void AMyTest_TopDownPlayerController::Move(const FInputActionValue& Value)
+{
+	if (m_bGamePlayControllable == false)return;
+
+	IPlayerControllInterface* Interface = CastChecked<IPlayerControllInterface>(GetCharacter());
+	Interface->Keyboard_Move(Value);
+}
+
 void AMyTest_TopDownPlayerController::Click_Skill(uint8 SkillNum)
 {
 	switch (static_cast<::ESkill>(SkillNum))
@@ -554,7 +565,7 @@ void AMyTest_TopDownPlayerController::Click_Skill(uint8 SkillNum)
 		}
 		case ESkill::Skill_W:
 		{
-			Click_W();
+			Click_T();
 			break;
 		}
 		case ESkill::Skill_E:

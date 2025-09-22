@@ -199,6 +199,7 @@ void APlayerCharacter::ChangeCameraView()
 
 }
 
+#pragma region Behavior Function
 void APlayerCharacter::OnDefense()
 {
 	SetState(EBehaviorState::Defense);
@@ -217,6 +218,7 @@ void APlayerCharacter::Death()
 		Super::Death();
 	}
 }
+#pragma endregion
 
 void APlayerCharacter::Look_UpDown(float Value)
 {
@@ -273,8 +275,8 @@ void APlayerCharacter::MoveToForward(float Value)
 {
 	// 키입력으로 들어오기도 하고 외부에서 제어로 들어오기도 한다 그걸 고려하자.
 
-	//AddMovementInput(GetActorForwardVector(), Value);
-	GetCharacterMovement()->AddForce(GetActorForwardVector() * Value);
+	AddMovementInput(GetActorForwardVector(), Value);
+	//GetCharacterMovement()->AddForce(GetActorForwardVector() * Value);
 
 	// 애니메이션 을 위한 보간 이라서 이동 후에 한다.
 	m_Vertical = FMath::Clamp(Value, -1.f, 1.f);
@@ -285,11 +287,28 @@ void APlayerCharacter::MoveToRight(float Value)
 {
 	// 키입력으로 들어오기도 하고 외부에서 제어로 들어오기도 한다 그걸 고려하자.
 
-	//AddMovementInput(GetActorRightVector(), Value);
-	GetCharacterMovement()->AddForce(GetActorRightVector() * Value);
+	AddMovementInput(GetActorRightVector(), Value);
+	//GetCharacterMovement()->AddForce(GetActorRightVector() * Value);
 
 	// 애니메이션 을 위한 보간 이라서 이동 후에 한다.
 	m_Horizontal = FMath::Clamp(Value, -1.f, 1.f);
+}
+
+void APlayerCharacter::MoveToDirection2D(const FVector2D& Direction)
+{
+	// 키입력으로 들어오기도 하고 외부에서 제어로 들어오기도 한다 그걸 고려하자.
+
+	FRotator ControlRot = Controller->GetControlRotation();
+	FRotator YawRot(0, ControlRot.Yaw, 0);
+
+	FVector Forward = FRotationMatrix(YawRot).GetUnitAxis(EAxis::X);
+	FVector Right = FRotationMatrix(YawRot).GetUnitAxis(EAxis::Y);
+
+	AddMovementInput(Forward, Direction.Y);
+	AddMovementInput(Right, Direction.X);
+	m_Vertical = FMath::Clamp(Direction.Y, -1.f, 1.f);
+	m_Horizontal = FMath::Clamp(Direction.X, -1.f, 1.f);
+
 }
 
 void APlayerCharacter::Sprint(float WalkSpeedRatio, float CameraSpeedRatio, bool HasState)
@@ -550,7 +569,6 @@ void APlayerCharacter::ClickButton(uint8 Button)
 	{
 		case AMyTest_TopDownPlayerController::EKey::Key_Q:
 		{
-			//m_pSkillComp->UseSkill(Button);
 			Click_Q();
 			break;
 		}
@@ -564,9 +582,9 @@ void APlayerCharacter::ClickButton(uint8 Button)
 			Click_R();
 			break;
 		}
-		case AMyTest_TopDownPlayerController::EKey::Key_W:
+		case AMyTest_TopDownPlayerController::EKey::Key_T:
 		{
-			Click_W();
+			Click_T();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_V:
@@ -574,18 +592,24 @@ void APlayerCharacter::ClickButton(uint8 Button)
 			ChangeCameraView();
 			break;
 		}
+		case AMyTest_TopDownPlayerController::EKey::Key_W:
+		{
+			Click_W();
+			break;
+		}
 		case AMyTest_TopDownPlayerController::EKey::Key_A:
 		{
-
+			Click_A();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_S:
 		{
+			Click_S();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_D:
 		{
-			OnDefense();
+			Click_D();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_G:
@@ -595,7 +619,7 @@ void APlayerCharacter::ClickButton(uint8 Button)
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_H:
 		{
-
+			OnDefense();
 			break;
 		}
 		case AMyTest_TopDownPlayerController::EKey::Key_J:
@@ -603,11 +627,7 @@ void APlayerCharacter::ClickButton(uint8 Button)
 
 			break;
 		}
-		case AMyTest_TopDownPlayerController::EKey::Key_T:
-		{
 
-			break;
-		}
 		case AMyTest_TopDownPlayerController::EKey::Key_Space:
 		{
 			//Jump();
@@ -647,16 +667,16 @@ void APlayerCharacter::Click_F()
 void APlayerCharacter::Click_Q()
 {
 	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_Q));
-}
-
-void APlayerCharacter::Click_W()
-{
-	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_W));
 	FName Tag(TEXT("Ability.Skill.StormKill"));
 
 	FAbilityHandle Handle;
 	FGameplayTag GameplayTag = FGameplayTag::RequestGameplayTag(Tag);
 	m_pAbilityComp->TryActivateByTag(GameplayTag, Handle);
+}
+
+void APlayerCharacter::Click_W()
+{
+
 }
 
 void APlayerCharacter::Click_E()
@@ -711,6 +731,8 @@ void APlayerCharacter::Click_J()
 
 void APlayerCharacter::Click_T()
 {
+	//m_pSkillComp->UseSkill(static_cast<uint8>(ESkill::Skill_W));
+
 }
 
 void APlayerCharacter::Click_Space()
@@ -796,6 +818,13 @@ void APlayerCharacter::Release_Shift()
 }
 
 void APlayerCharacter::ClickRMouse()
+{
+}
+void APlayerCharacter::Keyboard_Move(const FInputActionValue& Value)
+{
+	MoveToDirection2D(Value.Get<FVector2D>());
+}
+void APlayerCharacter::Look(const FInputActionValue& Value)
 {
 }
 #pragma endregion

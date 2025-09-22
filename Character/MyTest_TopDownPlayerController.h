@@ -154,6 +154,9 @@ protected:
 	void Release_Shift();
 	void Release_D();
 
+	// Move Key
+	void Move(const FInputActionValue& Value);
+
 	// Skill
 	void Click_Skill(uint8 SkillNum);
 #pragma endregion
@@ -172,8 +175,8 @@ private:
 	uint8 m_bGamePlayControllable : 1;
 	uint8 m_bSystemControllable : 1;
 
+#pragma region HUD Section
 protected:
-
 	// HUD Section
 	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "HUDWidgets", Meta = (BlueprintProtected = "true"))
 	TSubclassOf<UUserWidget> HUD_Class;
@@ -187,7 +190,10 @@ protected:
 	TObjectPtr<UUserWidget> m_CurrentWidget;
 
 	uint8 m_HUDState = 0;
+#pragma endregion
 
+#pragma region KeyAction Section
+protected:
 	// Key Action
 	/** Left Click Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
@@ -204,6 +210,13 @@ protected:
 	/**  Key Input Action */
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
 	TMap<FKey,UInputAction*> SetDestKeyAction;
+
+	/**  MoveKey Input Action */
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
+	UInputAction* MoveKeyAction;
+
+
+#pragma endregion
 
 };
 

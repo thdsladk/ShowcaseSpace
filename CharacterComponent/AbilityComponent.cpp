@@ -128,10 +128,10 @@ bool UAbilityComponent::IsOnCooldown(FGameplayTag CooldownTag) const
 
 double UAbilityComponent::GetCooldownRatio(FGameplayTag CooldownTag) const
 {
-	const double* ExpireTime = m_CooldownsUTC.Find(CooldownTag);
-    if (*ExpireTime > 0.0)
+	double ExpireTime = *(m_CooldownsUTC.Find(CooldownTag));
+    if (ExpireTime > 0.0)
     {
-        return (FPlatformTime::Seconds() / *ExpireTime);
+        return (FPlatformTime::Seconds() / ExpireTime);
 
     }
     else
