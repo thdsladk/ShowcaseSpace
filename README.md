@@ -11,6 +11,12 @@ Ability / Character / CharacterComponent / UI
 
 ## 언리얼 프로젝트 ##
 
+- 엔진 : Unreal Engine 5.6.1
+- 에디터 : Microsoft Visual Studio 2022
+- 제작 기간 : 2026.01 ~ 2026.06
+- 개발 규모 : 1인 개발
+
+
 1. 인벤토리 시스템  
  - 장비 시스템 추가 
 
@@ -24,7 +30,7 @@ Ability / Character / CharacterComponent / UI
 5. 어빌리티 시스템 
    
 
-< GAS를 참고하여 어빌리티 시스템 설계중 > 
+< GAS를 참고하여 어빌리티 시스템 설계 > 
 < 어빌리티 시스템에서는 데이터를 UAssetdata를 상속받아서 관리 >
 < 인벤토리 시스템에서는 구조체만으로 데이터를 관리 > 
 
