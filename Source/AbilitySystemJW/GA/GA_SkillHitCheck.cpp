@@ -5,10 +5,10 @@
 #include "AbilitySystemJW.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GA/Task/AT_WaitTargetData_Skill.h"
-#include "GA/TargetActor/TA_Skill.h"
+#include "AbilityTask/AT_WaitTargetData_Skill.h"
+#include "TargetActor/TA_Skill.h"
 #include "GameFramework/Character.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 #include "Tag/JWGameplayTag.h"
 
 
@@ -55,6 +55,8 @@ void UGA_SkillHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 
 void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
+
+
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Ensured();
 	if (SourceASC == nullptr) return;
 
@@ -93,7 +95,6 @@ void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHa
 					{
 						TargetASC->ExecuteGameplayCue(*m_GameplayCues.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
 					}
-		
 				}
 			}
 		}
@@ -110,7 +111,7 @@ void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHa
 	// Actor만 있는 경우 ( Overlap 등 ) 
 	else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
 	{
-		for (auto& Actor : TargetDataHandle.Data[0]->GetActors())
+		for (auto& Actor : TargetDataHandle.Data[0].Get()->GetActors())
 		{
 			// GameplayEvent  HitReact 전달
 			FGameplayEventData PayloadData;

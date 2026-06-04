@@ -64,13 +64,10 @@ protected:
 #pragma region Blueprint Functions
 protected:
 	UFUNCTION(BlueprintNativeEvent, BlueprintCallable, Category = "MotionWarping")
-	void CalcMotionWarping(ACharacter* OwnerCharacter);
-	virtual void CalcMotionWarping_Implementation(ACharacter* OwnerCharacter);
+	void CalcMotionWarping(ACharacter* Character);
+	virtual void CalcMotionWarping_Implementation(ACharacter* Character);
 
 #pragma endregion
-
-private:
-	void ComputeCharacterMotion(ACharacter* Character);
 
 #pragma region Montage Propertys
 
@@ -90,7 +87,7 @@ protected:
 	TSubclassOf<AIndicatorBase> m_IndicatorClass;
 	TObjectPtr<AIndicatorBase> m_Indicator;
 
-	UPROPERTY(EditAnywhere, Category = "Ability|Data")
+	UPROPERTY(EditAnywhere,BlueprintReadOnly, Category = "Ability|Data")
 	TObjectPtr<UDA_SkillData> m_SkillData;
 
 	UPROPERTY(EditAnywhere, Category = "Ability|Data")

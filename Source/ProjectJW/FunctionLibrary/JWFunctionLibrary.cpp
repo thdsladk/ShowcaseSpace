@@ -194,6 +194,72 @@ bool UJWFunctionLibrary::CheckCollisionTrace_NearestOverlapByChannel(AActor* Sou
     return bHitDetected;
 }
 
+void UJWFunctionLibrary::Debug_ShapeSingleByChannel(AActor* SourceActor, FVector Position, FCollisionShape Collision, bool HitDetected)
+{
+    const FVector Direction = SourceActor->GetActorForwardVector();
+
+    switch (Collision.ShapeType)
+    {
+        case ECollisionShape::Sphere:
+        {
+            float SphereRadius = Collision.GetSphereRadius();
+            FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
+
+            DrawDebugSphere(
+                SourceActor->GetWorld(),
+                Position,
+                SphereRadius,
+                16,                // 세그먼트 수 (디버그용)
+                DrawColor,
+                false,
+                5.0f
+            );
+
+            break;
+        }
+        case ECollisionShape::Box:
+        {
+            FVector BoxExtent = Collision.GetBox();
+            FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
+
+            DrawDebugBox(
+                SourceActor->GetWorld(),
+                Position,
+                BoxExtent,
+                FRotationMatrix::MakeFromZ(Direction).ToQuat(),
+                DrawColor,
+                false,
+                5.0f
+            );
+
+            break;
+        }
+        case ECollisionShape::Capsule:
+        {
+            FColor DrawColor = HitDetected ? FColor::Green : FColor::Red;
+
+            DrawDebugCapsule(
+                SourceActor->GetWorld(),
+                Position,
+                Collision.GetExtent().Y,
+                Collision.GetCapsuleRadius(),
+                FRotationMatrix::MakeFromZ(Direction).ToQuat(),
+                DrawColor,
+                false,
+                5.0f
+            );
+            break;
+        }
+        default:
+        {
+            // 여기로 들어오면 잘못 넣은 경우.
+            // 로그를 남기자 
+            ensure(false);
+            break;
+        }
+    }
+}
+
 void UJWFunctionLibrary::Debug_ShapeSingleByChannel(AActor* SourceActor, float Range, FCollisionShape Collision, bool HitDetected)
 {
     UCapsuleComponent* Capsule = Cast<UCapsuleComponent>(SourceActor->GetRootComponent());

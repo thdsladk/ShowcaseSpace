@@ -11,7 +11,7 @@
 
 #include "Data/ComboActionData.h"
 #include "MotionWarpingComponent.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 #include "Header/JWHeader.h"
 
 #include "FunctionLibrary/JWFunctionLibrary.h"

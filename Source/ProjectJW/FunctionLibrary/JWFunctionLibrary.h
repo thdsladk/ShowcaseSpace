@@ -33,6 +33,7 @@ public:
 	static bool CheckCollisionTrace_NearestOverlapByChannel(AActor* SourceActor, const FVector Start, FCollisionShape Collision, ECollisionChannel TraceChannel, TArray<FOverlapResult>& OutNearestFirstOverlapResults, FName TraceTag = FName(), bool bIgnoreSelf = true);
 
 	
+	static void Debug_ShapeSingleByChannel(AActor* SourceActor, FVector Position, FCollisionShape Collision, bool HitDetected);
 	static void Debug_ShapeSingleByChannel(AActor* SourceActor, float Range, FCollisionShape Collision, bool HitDetected);
 	static void Debug_ShapeSingleByChannel(AActor* SourceActor, const FVector Start, const FVector End, FCollisionShape Collision, bool HitDetected);
 

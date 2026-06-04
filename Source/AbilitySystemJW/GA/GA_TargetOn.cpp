@@ -2,7 +2,7 @@
 
 
 #include "GA/GA_TargetOn.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 #include "Character/CharacterBase.h"
 #include "Tag/JWGameplayTag.h"
 #include "AbilitySystemComponent.h"
@@ -33,7 +33,6 @@ void UGA_TargetOn::ActivateAbility(const FGameplayAbilitySpecHandle Handle, cons
 		}
 
 		EndAbility(Handle, ActorInfo, ActivationInfo, true, false);
-
 	}
 
 }

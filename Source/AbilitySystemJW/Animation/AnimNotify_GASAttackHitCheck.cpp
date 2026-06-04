@@ -27,6 +27,7 @@ void UAnimNotify_GASAttackHitCheck::Notify(USkeletalMeshComponent* MeshComp, UAn
 			PayloadData.EventMagnitude = m_ComboAttackLevel;
 			PayloadData.Instigator = OwnerActor;
 			PayloadData.TargetTags.AddTag(m_InflictedStatusTag);
+			PayloadData.TargetTags.AddTag(m_SkillConfirmTag);
 			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(OwnerActor, m_TriggerGameplayTag, PayloadData);
 		}
 	}

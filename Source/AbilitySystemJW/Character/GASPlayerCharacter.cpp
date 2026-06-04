@@ -10,8 +10,8 @@
 #include "Data/DA_StartupCharacterSkill.h"
 #include "Interface/PlayerControllerInterface.h"
 #include "CharacterComponents/PlayerCombatComponent.h"
-#include "Components/TargetSystemComponent.h"
-#include "Components/PhysicsMotionSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
+#include "CharacterComponents/PhysicsMotionSystemComponent.h"
 #include "CharacterComponents/GASDecalComponent.h"
 #include "CharacterComponents/LinkedActionComponent.h"
 #include "Items/Weapon/GASWeaponBase.h"
@@ -31,7 +31,9 @@ AGASPlayerCharacter::AGASPlayerCharacter(const FObjectInitializer& ObjectInitial
 	:Super(ObjectInitializer)
 	,m_GaugeBarToolSize(100.f,20.f)
 {
+	// 어빌리티를 저장해서 관리하기 위한 리스트 초기화.
 	m_AbilitySystemComponent = nullptr;
+	
 
 #pragma region Widget Setting
 
@@ -166,23 +168,8 @@ void AGASPlayerCharacter::PossessedBy(AController* NewController)
 				m_AbilitySystemComponent->GiveAbility(StartSpec);
 			}
 
-			for (const auto& StartSkillAbility : m_StartupCharacterSkillDataObject[ECombatMode(PCI->GetCombatMode())]->StartAbilities)
-			{
-				FGameplayAbilitySpec StartSpec(StartSkillAbility);
-				m_AbilitySystemComponent->GiveAbility(StartSpec);
-			}
-
-			for (const auto& StartSkillInputAbility : m_StartupCharacterSkillDataObject[ECombatMode(PCI->GetCombatMode())]->StartInputAbilities)
-			{
-				FGameplayAbilitySpec StartSpec(StartSkillInputAbility.Value);
-				StartSpec.InputID = int32(StartSkillInputAbility.Key);
-				m_AbilitySystemComponent->GiveAbility(StartSpec);
-			}
-
-
-			APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
-			PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
-
+			// Skill Ability Grant
+			GrantSkillAbility(PCI->GetCombatMode());
 
 			// Play Effect
 			if (m_StartupCharacterDataObject->StartupEffects.IsEmpty() == false)
@@ -193,6 +180,10 @@ void AGASPlayerCharacter::PossessedBy(AController* NewController)
 					m_AbilitySystemComponent->ApplyGameplayEffectToSelf(EffectCDO,1.f, m_AbilitySystemComponent->MakeEffectContext());
 				}
 			}
+
+
+			APlayerController* PlayerController = CastChecked<APlayerController>(NewController);
+			PlayerController->ConsoleCommand(TEXT("showdebug abilitysystem"));
 
 
 			// Initialize Passive Tag
@@ -580,9 +571,77 @@ const FGameplayTag AGASPlayerCharacter::GetCombatModeTag() const
 	}
 	return FGameplayTag::EmptyTag;
 }
+#pragma endregion
+
+#pragma region PawnCombat Interface
 UPawnCombatComponent* AGASPlayerCharacter::GetPawnCombatComponent() const
 {
 	return m_PlayerCombatComponent;
+}
+#pragma endregion
+
+#pragma region Ability Management Interface
+void AGASPlayerCharacter::GrantSkillAbility(uint8 CombatMode)
+{
+	if (m_AbilitySystemComponent == nullptr) return;
+	if (m_StartupCharacterSkillDataObject.Contains(ECombatMode(CombatMode)) == false)
+	{
+		m_StartupCharacterSkillDataObject.Add(ECombatMode(CombatMode), m_StartupCharacterSkillData[ECombatMode(CombatMode)].LoadSynchronous());
+	}
+
+	// Grant Ability
+	for (const auto& StartSkillAbility : m_StartupCharacterSkillDataObject[ECombatMode(CombatMode)]->StartAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(StartSkillAbility);
+		m_CurrentSkillAbilityList.SkillAbilitySpecHandles.Add(m_AbilitySystemComponent->GiveAbility(StartSpec));
+
+	}
+	for (const auto& StartSkillInputAbility : m_StartupCharacterSkillDataObject[ECombatMode(CombatMode)]->StartInputAbilities)
+	{
+		FGameplayAbilitySpec StartSpec(StartSkillInputAbility.Value);
+		StartSpec.InputID = int32(StartSkillInputAbility.Key);
+		m_CurrentSkillAbilityList.InputSkillAbilitySpecHandles.Add(m_AbilitySystemComponent->GiveAbility(StartSpec));
+	}
+
+	// Grant Effect
+	if (m_StartupCharacterSkillDataObject[ECombatMode(CombatMode)]->StartupEffects.IsEmpty() == false)
+	{
+		for (const auto& SkillEffect : m_StartupCharacterSkillDataObject[ECombatMode(CombatMode)]->StartupEffects)
+		{
+			UGameplayEffect* EffectCDO = SkillEffect->GetDefaultObject<UGameplayEffect>();
+			m_CurrentSkillAbilityList.StartupEffectSpecHandles.Add(m_AbilitySystemComponent->ApplyGameplayEffectToSelf(EffectCDO, 1.f, m_AbilitySystemComponent->MakeEffectContext()));
+		}
+	}
+
+
+}
+
+void AGASPlayerCharacter::RemoveSkillAbility()
+{
+	if (m_AbilitySystemComponent == nullptr) return;
+
+	TArray<FGameplayAbilitySpecHandle>& SkillAbilitySpecHandles = m_CurrentSkillAbilityList.SkillAbilitySpecHandles;
+	for (const FGameplayAbilitySpecHandle& Handle : SkillAbilitySpecHandles)
+	{
+		m_AbilitySystemComponent->ClearAbility(Handle);
+	}
+	TArray<FGameplayAbilitySpecHandle>& InputSkillAbilitySpecHandles = m_CurrentSkillAbilityList.InputSkillAbilitySpecHandles;
+	for (const FGameplayAbilitySpecHandle& Handle : InputSkillAbilitySpecHandles)
+	{
+		m_AbilitySystemComponent->ClearAbility(Handle);
+	}
+	TArray<FActiveGameplayEffectHandle>& EffectSpecHandles = m_CurrentSkillAbilityList.StartupEffectSpecHandles;
+	for (const FActiveGameplayEffectHandle& Handle : EffectSpecHandles)
+	{
+		m_AbilitySystemComponent->RemoveActiveGameplayEffect(Handle);
+	}
+
+}
+
+void AGASPlayerCharacter::ChangeSkillAbility(uint8 CombatMode)
+{
+	RemoveSkillAbility();
+	GrantSkillAbility(CombatMode);
 }
 #pragma endregion
 

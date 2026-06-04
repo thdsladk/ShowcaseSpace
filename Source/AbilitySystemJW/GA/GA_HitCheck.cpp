@@ -3,9 +3,9 @@
 
 #include "GA/GA_HitCheck.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "GA/Task/AT_WeaponCollision.h"
+#include "AbilityTask/AT_WeaponCollision.h"
 #include "Abilities/Tasks/AbilityTask_WaitGameplayEvent.h"
-#include "GA/TargetActor/TA_Base.h"
+#include "TargetActor/TA_Base.h"
 #include "Attribute/CharacterAttributeSet.h"
 #include "Tag/JWGameplayTag.h"
 #include "Character/CharacterBase.h"

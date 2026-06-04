@@ -11,7 +11,7 @@
 #include "Interface/PlayerControllerInterface.h"
 #include "Interface/WidgetInterface.h"
 #include "Prop/ProjectileBase.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 #include "Attribute/CharacterAttributeSet.h"
 #include "FunctionLibrary/JWFunctionLibrary.h"
 #include "Tag/JWGameplayTag.h"

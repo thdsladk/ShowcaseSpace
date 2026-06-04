@@ -5,7 +5,7 @@
 #include "AbilitySystemJW.h"
 #include "GameplayEffectExtension.h"
 #include "Character/CharacterBase.h"
-#include "Components/PhysicsMotionSystemComponent.h"
+#include "CharacterComponents/PhysicsMotionSystemComponent.h"
 #include "Tag/JWGameplayTag.h"
 
 

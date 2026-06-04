@@ -28,6 +28,10 @@ protected:
 	UPROPERTY(EditAnywhere)
 	FGameplayTag m_InflictedStatusTag;
 
+	UPROPERTY(EditAnywhere)
+	FGameplayTag m_SkillConfirmTag;
+
+
 
 	UPROPERTY(EditAnywhere)
 	float m_ComboAttackLevel;

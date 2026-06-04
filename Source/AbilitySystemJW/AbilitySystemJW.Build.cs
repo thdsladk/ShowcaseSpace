@@ -35,15 +35,24 @@ public class AbilitySystemJW : ModuleRules
             "AbilitySystemJW/Prop",
             "AbilitySystemJW/Tag",
             "AbilitySystemJW/GA",
-            "AbilitySystemJW/GA/Task",
-            "AbilitySystemJW/GA/TargetActor",
-            "AbilitySystemJW/GA/Effect",
+            "AbilitySystemJW/GE",
             "AbilitySystemJW/GC",
+            "AbilitySystemJW/AbilityTask",
+            "AbilitySystemJW/TargetActor",
             "AbilitySystemJW/Animation",
             "AbilitySystemJW/Character",
             "AbilitySystemJW/CharacterComponents",
+            "AbilitySystemJW/Components",
             "AbilitySystemJW/Attribute",
             "AbilitySystemJW/UI",
+            "AbilitySystemJW/Nortify",
+            "AbilitySystemJW/Items",
+
+
+
+
+
+
 
 
 

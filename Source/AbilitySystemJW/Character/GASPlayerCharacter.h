@@ -9,6 +9,11 @@
 #include "Header/GlobalEnum.h"
 #include "Interface/PawnCombatInterface.h"
 #include "Interface/WidgetInterface.h"
+#include "Interface/AbilityManagementInterface.h"
+
+#include "GameplayAbilitySpec.h"          // FGameplayAbilitySpecHandle
+#include "GameplayEffectTypes.h"          // FActiveGameplayEffectHandle
+
 #include "GASPlayerCharacter.generated.h"
 
 class UAbilitySystemComponent;
@@ -22,12 +27,20 @@ class UDA_StartupCharacter;
 class UDA_StartupCharacterSkill;
 class UPlayerCombatComponent;
 
-
+USTRUCT(BlueprintType)
+struct FSkillAbilityHandleList
+{
+	GENERATED_BODY()
+public:
+	TArray<FGameplayAbilitySpecHandle> SkillAbilitySpecHandles;
+	TArray<FGameplayAbilitySpecHandle> InputSkillAbilitySpecHandles;
+	TArray<FActiveGameplayEffectHandle>  StartupEffectSpecHandles;
+};
 /**
  * 
  */
 UCLASS(Blueprintable)
-class ABILITYSYSTEMJW_API AGASPlayerCharacter : public  APlayerCharacter, public IAbilitySystemInterface, public IPawnCombatInterface, public IWidgetInterface
+class ABILITYSYSTEMJW_API AGASPlayerCharacter : public  APlayerCharacter, public IAbilitySystemInterface, public IPawnCombatInterface, public IWidgetInterface, public IAbilityManagementInterface
 {
 	GENERATED_BODY()
 	
@@ -101,6 +114,14 @@ public:
 	const FGameplayTag GetCombatModeTag() const;
 #pragma endregion
 
+#pragma region Ability Management Interface
+public:
+	virtual void GrantSkillAbility(uint8 CombatMode)override;
+	virtual void RemoveSkillAbility()override;
+	virtual void ChangeSkillAbility(uint8 CombatMode)override;
+	
+#pragma endregion
+
 #pragma region PawnCombat Interface
 public:
 	virtual UPawnCombatComponent* GetPawnCombatComponent() const override;
@@ -112,6 +133,7 @@ public:
 	virtual void SetVisibleGaugeBar_Implementation(bool bVisible) override {}
 
 #pragma endregion
+
 
 	////////////////////			Member				//////////////////////	
 
@@ -172,6 +194,8 @@ protected:
 
 	TObjectPtr< UDA_StartupCharacter> m_StartupCharacterDataObject;
 	TMap < ECombatMode, TObjectPtr< UDA_StartupCharacterSkill>> m_StartupCharacterSkillDataObject;
+
+	FSkillAbilityHandleList m_CurrentSkillAbilityList;
 
 #pragma endregion
 

@@ -48,9 +48,6 @@ struct FSkillData : public FTableRowBase
 };
 
 
-
-
-
 USTRUCT(BlueprintType)
 struct FSkillTargetData : public FTableRowBase
 {

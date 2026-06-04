@@ -9,13 +9,13 @@
 #include "Animation/AnimInstanceBase.h"
 #include "Tag/JWGameplayTag.h"
 
-#include "GA/TargetActor/TA_Trace.h"
-#include "GA/Task/AT_Trace.h"
+#include "TargetActor/TA_Trace.h"
+#include "AbilityTask/AT_Trace.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Attribute/CharacterAttributeSet.h"
 #include "AbilitySystemJW.h"
 #include "Header/JWHeader.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 #include "MotionWarpingComponent.h"
 #include "FunctionLibrary/JWFunctionLibrary.h"
 

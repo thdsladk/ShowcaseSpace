@@ -6,6 +6,7 @@
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interface/PlayerControllerInterface.h"
+#include "Interface/AbilityManagementInterface.h"
 #include "Interface/EquipmentInterface.h"
 #include "Animation/AnimInstanceBase.h"
 #include "AbilitySystemComponent.h"
@@ -74,11 +75,15 @@ void UGA_ChangeCombatMode::OnCompleteCallback_Sheathe()
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
 	UAnimInstanceBase* AnimInstance = CastChecked<UAnimInstanceBase>(Character->GetMesh()->GetAnimInstance());
 	IPlayerControllerInterface* PCI = CastChecked<IPlayerControllerInterface>(Character->GetController());
+	IAbilityManagementInterface* AMI = CastChecked<IAbilityManagementInterface>(Character);
 
 	//uint8 CombatMode = PCI->AddCombatMode();		// Add방식은 제거하고 그냥 Set으로 넣어준다.
 	PCI->SetCombatMode(uint8(m_CombatMode));
 	PCI->UpdateCharacterControl();
 	
+	// 어빌리티가 변경 되어야한다. 
+	AMI->ChangeSkillAbility(uint8(m_CombatMode));
+
 	// 게임 플레이 태그 등록 
 	if (Character != nullptr)
 	{
@@ -89,31 +94,6 @@ void UGA_ChangeCombatMode::OnCompleteCallback_Sheathe()
 			ASC->RemoveLooseGameplayTag(Tag);
 		}
 		ASC->AddLooseGameplayTag(m_CombatModeTagList[uint8(m_CombatMode)]);
-		
-		//FGameplayTagContainer CombatModeTags;
-		//CombatModeTags.AddTag(JWTAG_PLAYER_IDLE);
-		//CombatModeTags.AddTag(JWTAG_PLAYER_MELEE);
-		//CombatModeTags.AddTag(JWTAG_PLAYER_RANGE);
-		//CombatModeTags.AddTag(JWTAG_PLAYER_DUALBLADE);
-		//
-		//ASC->RemoveLooseGameplayTags(CombatModeTags);
-		//
-		//if (CombatMode == uint8(ECombatMode::IdleMode))
-		//{
-		//	ASC->AddLooseGameplayTag(JWTAG_PLAYER_IDLE);
-		//}
-		//else if (CombatMode == uint8(ECombatMode::MeleeMode))
-		//{
-		//	ASC->AddLooseGameplayTag(JWTAG_PLAYER_MELEE);
-		//}
-		//else if (CombatMode == uint8(ECombatMode::RangeMode))
-		//{
-		//	ASC->AddLooseGameplayTag(JWTAG_PLAYER_RANGE);
-		//}
-		//else if (CombatMode == uint8(ECombatMode::DualBladeMode))
-		//{
-		//	ASC->AddLooseGameplayTag(JWTAG_PLAYER_DUALBLADE);
-		//}
 
 	}
 

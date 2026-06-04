@@ -10,16 +10,16 @@
 #include "FunctionLibrary/JWFunctionLibrary.h"
 #include "AbilitySystemBlueprintLibrary.h"
 #include "Tag/JWGameplayTag.h"
-#include "GA/TargetActor/TA_Base.h"
-#include "GA/TargetActor/TA_Skill.h"
-#include "GA/Task/AT_WaitTargetData_Confirm.h"
+#include "TargetActor/TA_Base.h"
+#include "TargetActor/TA_Skill.h"
+#include "AbilityTask/AT_WaitTargetData_Confirm.h"
 #include "GameFramework/CharacterMovementComponent.h"
 
 #include "Kismet/KismetMathLibrary.h"
 #include "Attribute/CharacterSkillAttributeSet.h"
 
 #include "MotionWarpingComponent.h"
-#include "Components/TargetSystemComponent.h"
+#include "CharacterComponents/TargetSystemComponent.h"
 
 // Task 관련 헤더
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
@@ -91,7 +91,6 @@ void UGA_SkillBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	{
 		RecticleAndCornfirm->ValidData.AddDynamic(this, &UGA_SkillBase::PlaySkill_TargetData);
 		RecticleAndCornfirm->Cancelled.AddDynamic(this, &UGA_SkillBase::CancelSkill_TargetData);
-		RecticleAndCornfirm->OnComplete.AddDynamic(this, &UGA_SkillBase::PlaySkill_TargetData);
 		RecticleAndCornfirm->ReadyForActivation();
 	}
 
@@ -171,8 +170,7 @@ void UGA_SkillBase::OnInterruptedCallback()
 
 void UGA_SkillBase::PlaySkill()
 {	
-	// 타게팅 시작지점을 CreateTask 세번째 인자로 넘겨준다. 
-
+	// 타게팅 시작지점을 CreateTask 세번째 인자로 넘겨준다.
 	//ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
 	//FString StrEventTag(TEXT("Event.Skill"));
 	//const FString StrParentTag(TEXT("Character.Skill"));
@@ -204,26 +202,36 @@ void UGA_SkillBase::PlaySkill_TargetData(const FGameplayAbilityTargetDataHandle&
 	// 타게팅 시스템을 통해서 타겟을 바라보도록 모션워핑 설정
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
 
-	//if (TargetDataHandle.Data.IsValidIndex(0) == false)
-	//{
-	//	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
-	//	return;
-	//}
-
 	// 타게팅 시스템에 등록. 
 	UTargetSystemComponent* TargetSystemComponent = Character->FindComponentByClass<UTargetSystemComponent>();
-	if (TargetSystemComponent != nullptr)
+	if(TargetSystemComponent != nullptr)
 	{
-		for (auto& Data : TargetDataHandle.Data)
+		if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
 		{
-			for (auto& Target : Data.Get()->GetActors())
+			FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
+
+			TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), HitResult.GetActor());
+		}
+		else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
+		{
+			for (auto& Target : TargetDataHandle.Data[0].Get()->GetActors())
 			{
 				TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), Target.Get());
 			}
 		}
+		else
+		{
+			CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+			return;
+		}
+	}
+	else
+	{
+		CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
+		return;
 	}
 
-	ComputeCharacterMotion(Character);
+	CalcMotionWarping(Character);
 
 	// 여기에서 Indicator로 넘어가자.
 	if (m_IndicatorClass != nullptr)
@@ -266,13 +274,18 @@ void UGA_SkillBase::PlaySkill_TargetData(const FGameplayAbilityTargetDataHandle&
 
 			// 캐릭터 위치와 회전은 유지
 			FHitResult HitResult;
-			FVector Start = Character->GetActorLocation() + FVector{ 0.f,0.f,50.f };
+			FVector Start = Character->GetActorLocation() + FVector{0.f,0.f,50.f};
+			// Rectangle 모양이면 위치를 보정
+			EIndicatorShape Shape = static_cast<EIndicatorShape>(m_Indicator->GetIndicatorShape());
+			if (Shape == EIndicatorShape::Rect)
+			{
+				Start += (LookAtRotation.Vector() * (m_Indicator->GetIndicatorMesh()->GetRelativeScale3D().X * m_SkillData->Range * 0.5f));	
+			}
 			FVector End = Start - FVector{ 0.f,0.f,1000.f };
 			UJWFunctionLibrary::CheckCollisionTrace_LineSingleByChannel(Character, Start, End, ECC_Visibility, HitResult, FName(TEXT("FloorTrace")));
 			const FVector SpawnLocation = HitResult.ImpactPoint + FVector{ 0.0f,0.0f,5.0f };
 
 			// 앞에서 계산한 ScaleFactor 사용
-
 			FTransform SpawnTransform(LookAtRotation, SpawnLocation, ScaleFactor);
 			m_Indicator->FinishSpawning(SpawnTransform);
 
@@ -293,43 +306,31 @@ void UGA_SkillBase::CancelSkill_TargetData(const FGameplayAbilityTargetDataHandl
 	CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
 }
 
-void UGA_SkillBase::CalcMotionWarping_Implementation(ACharacter* OwnerCharacter)
+void UGA_SkillBase::CalcMotionWarping_Implementation(ACharacter* Character)
 {
 	/*
 		이동 기능이 존재하는지로 구분
-	*/
-	UMotionWarpingComponent* MotionWarpingComp = OwnerCharacter->FindComponentByClass<UMotionWarpingComponent>();
-	if (MotionWarpingComp == nullptr) return;
-
-	ATA_Base* TargetActor = Cast<ATA_Base>(m_TargetSystemComp->GetTargetActor());
-	if (TargetActor != nullptr)
-	{
-		const FTransform& StartTransform = TargetActor->StartLocation.LiteralTransform;
-		// 타게팅 시스템을 통해서 타겟을 바라보도록 모션워핑 설정
-		if (m_HasMovement == true)
-		{
-			// Motion Warping 타겟 업데이트
-			MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(FName(TEXT("TargetActor")), StartTransform.GetLocation(), StartTransform.GetRotation().Rotator());
-		}
-		else
-		{
-			// Motion Warping 타겟 업데이트
-			MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(FName(TEXT("TargetActor")), OwnerCharacter->GetActorLocation(), StartTransform.GetRotation().Rotator());
-		}
-	}
-}
-
-void UGA_SkillBase::ComputeCharacterMotion(ACharacter* Character)
-{
-	/*
-	*	캐릭터의 행동을 계산하는 함수 ( 타겟팅이 확정된 후에 실행 ? / 그러나 확정 전에도 이동이 발생할수도 있을거 같긴하다. ) 
-	* (임시) 이부분은 대대적으로 한번 수정이 필요하다.  이유 :  루트모션이 없는 몽타주에 대해서 어떻게 이동을 처리할지가 제대로 이루어지지 못한다. 임의로 LaunchCharacter로 이동하고 있지만 부자연스럽다. 
+		자식에서 재정의해서 블루프린트에서 스킬별로 이동 기능을 각자 구현하도록 설계. ( 네이티브 코드단에서는 디폴트 구현만 한다. )
 	*/
 	UMotionWarpingComponent* MotionWarpingComp = Character->FindComponentByClass<UMotionWarpingComponent>();
-	if (MotionWarpingComp != nullptr && m_SkillMontage->HasRootMotion() == true)
+	if(MotionWarpingComp != nullptr && m_SkillMontage->HasRootMotion() == true)
 	{
-		// 이건 블루프린트에서 계산하도록 하는 함수.
-		CalcMotionWarping(Character);
+		ATA_Base* TargetActor = Cast<ATA_Base>(m_TargetSystemComp->GetTargetActor());
+		if (TargetActor != nullptr)
+		{
+			const FTransform& StartTransform = TargetActor->StartLocation.LiteralTransform;
+			// 타게팅 시스템을 통해서 타겟을 바라보도록 모션워핑 설정
+			if (m_HasMovement == true)
+			{
+				// Motion Warping 타겟 업데이트
+				MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(FName(TEXT("TargetActor")), StartTransform.GetLocation(), StartTransform.GetRotation().Rotator());
+			}
+			else
+			{
+				// Motion Warping 타겟 업데이트
+				MotionWarpingComp->AddOrUpdateWarpTargetFromLocationAndRotation(FName(TEXT("TargetActor")), Character->GetActorLocation(), StartTransform.GetRotation().Rotator());
+			}
+		}
 	}
 	else
 	{
@@ -352,7 +353,8 @@ void UGA_SkillBase::ComputeCharacterMotion(ACharacter* Character)
 			{
 				// TargetActor가 없으면 실행 못한다. 
 			}
-		
 		}
 	}
+
+
 }

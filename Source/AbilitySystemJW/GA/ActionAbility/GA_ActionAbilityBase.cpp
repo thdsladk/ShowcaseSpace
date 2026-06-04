@@ -7,6 +7,8 @@
 #include "CharacterComponents/LinkedActionComponent.h"
 #include "Character/CharacterBase.h"
 
+#include "FunctionLibrary/JWFunctionLibrary.h"
+
 
 UGA_ActionAbilityBase::UGA_ActionAbilityBase()
 	: m_IsActive(false)
@@ -17,9 +19,12 @@ void UGA_ActionAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Han
 {
 	Super::ActivateAbility(Handle, ActorInfo, ActivationInfo, TriggerEventData);
 
-	// Cost와 Cooldown을 사용하려면 호출 필수 
-	CommitAbility(Handle, ActorInfo, ActivationInfo);
-
+	// 디버그 모드에서는 쿨다운이랑 비용이 안들도록 세팅
+	if (UJWFunctionLibrary::IsDebugMode(ActorInfo->AvatarActor.Get()) == false)
+	{
+		// Cost와 Cooldown을 사용하려면 호출 필수 
+		CommitAbility(Handle, ActorInfo, ActivationInfo);
+	}
 	FGameplayAbilitySpec* Spec = ActorInfo->AbilitySystemComponent->FindAbilitySpecFromHandle(Handle);
 	if (Spec != nullptr)
 	{

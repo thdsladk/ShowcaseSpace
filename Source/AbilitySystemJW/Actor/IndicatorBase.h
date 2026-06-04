@@ -21,6 +21,7 @@ class ABILITYSYSTEMJW_API AIndicatorBase : public AActor
 	
 public:	
 	// Sets default values for this actor's properties
+
 	AIndicatorBase();
 
 	UFUNCTION(BlueprintCallable, Category = "Indicator")
@@ -44,8 +45,6 @@ public:
 	void Update_MI();
 
 #pragma endregion
-
-
 
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Mesh")

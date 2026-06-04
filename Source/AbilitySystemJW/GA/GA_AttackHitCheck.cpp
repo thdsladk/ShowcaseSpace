@@ -6,8 +6,8 @@
 
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
-#include "GA/Task/AT_Trace.h"
-#include "GA/TargetActor/TA_Skill.h"
+#include "AbilityTask/AT_Trace.h"
+#include "TargetActor/TA_Skill.h"
 #include "Tag/JWGameplayTag.h"
 #include "Blueprint/UserWidget.h"
 #include "UI/DamageFontWidget.h"
