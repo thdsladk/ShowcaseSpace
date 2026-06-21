@@ -21,7 +21,10 @@ UAT_WaitTargetData_Skill* UAT_WaitTargetData_Skill::WaitTargetData(UGameplayAbil
 	UAT_WaitTargetData_Skill* MyObj = NewAbilityTask<UAT_WaitTargetData_Skill>(OwningAbility, TaskInstanceName);		//Register for task list here, providing a given FName as a key
 	MyObj->TargetClass = InTargetClass;
 	MyObj->TargetActor = nullptr;
-	MyObj->ConfirmationType = ConfirmationType;
+	// 스킬 판정은 체크없이 진행하도록 하자. 
+	//MyObj->ConfirmationType = ConfirmationType;
+	MyObj->ConfirmationType = EGameplayTargetingConfirmation::Instant;
+
 	return MyObj;
 }
 

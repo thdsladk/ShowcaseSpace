@@ -45,18 +45,26 @@ protected:
 
 	TEnumAsByte<EGameplayTargetingConfirmation::Type>  m_ConfirmationType;
 
-	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effects")
-	TMap<FGameplayTag, TSubclassOf<UGameplayEffect>> m_DamageEffects;
+	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effects", meta = (ToolTip = "ToTarget"))
+	TSubclassOf<UGameplayEffect> m_DamageEffect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effects", meta = (ToolTip = "ToTarget"))
+	TMap<FGameplayTag, TSubclassOf<UGameplayEffect>> m_DamageBuffEffects;
 
 	// 버프 효과들
-	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effects")
+	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effects", meta = (ToolTip = "ToSelf"))
 	TArray<TSubclassOf<UGameplayEffect>> m_BuffEffects;
 
 	// 실행할 GameplayCue들
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Cues")
-	TMap<FGameplayTag, FGameplayTag> m_GameplayCues;
+	TMap<FGameplayTag, FGameplayTag> m_GameplayCues_Effect;
+
+	UPROPERTY(EditDefaultsOnly, Category = "Ability|Cues")
+	TMap<FGameplayTag, FGameplayTag> m_GameplayCues_Sound;
 
 
+	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effect")
+	TSubclassOf<UGameplayEffect> m_InitDefaultSkillEffect;
 
 
 	ESkillTargetActorType m_TargetActorType;

@@ -44,32 +44,28 @@ protected:
 
 	FORCEINLINE void IncreaseState(){ m_ShootState = (m_ShootState + 1U) % uint8(EShootState::End); }
 	FName GetNextSection();
-	void StartChargeTimer();
 
 
 protected:
 	void EndSection();
 	void ShootProjectile();
 
-
-
 #pragma region Range Section
 
 protected:
-	float m_ChargingGauge;
 	uint8 m_ShootState;
-	FTimerHandle m_ChargingTimerHandle;
 	uint8 m_IsInputRelease : 1;
 
 #pragma endregion
 
 protected:
-	// (임시) 화살 발사체 
 	UPROPERTY(EditAnywhere,Category = "Projectile")
 	TSubclassOf<AProjectileBase> m_ProjectileClass;
 
+	UPROPERTY(EditAnywhere, Category = "Effect")
 	TSubclassOf<UGameplayEffect> m_GaugeEffectClass;
 
+	FActiveGameplayEffectHandle m_GaugeActiveEffectHandle;
 
 	TObjectPtr<UAbilityTask_PlayMontageAndWait> m_PlayRangeAttackTask;
 

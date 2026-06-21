@@ -27,10 +27,9 @@ void UGA_ReactBase::ActivateAbility(const FGameplayAbilitySpecHandle Handle, con
 	ACharacter* Character = CastChecked<ACharacter>(ActorInfo->AvatarActor.Get());
 	IPlayerControllerInterface* PCI = Cast<IPlayerControllerInterface>(Character->GetController());
 
-	// 모션 워핑 
+	// 모션 워핑			// ContextHandle에서 Instigator를 가져오는 이유는 GameplayCue를 통해서 어빌리티가 활성화 되지만 GameplayEffect에 값을 넣어주고 있기때문.
 	ComputeMotionWarping(Character, *TriggerEventData->Instigator);
-
-
+	
 	UAbilitySystemComponent* SelfASC = GetAbilitySystemComponentFromActorInfo_Ensured();
 	
 	// 캐릭터의 행동 상태에 따라서 리액트 애니메이션을 다르게 재생

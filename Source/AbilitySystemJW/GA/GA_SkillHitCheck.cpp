@@ -17,18 +17,23 @@ UGA_SkillHitCheck::UGA_SkillHitCheck()
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 
-	m_DamageEffects.Add(JWTAG_EVENT_CHARACTER_LIGTHHIT, nullptr);
-	m_DamageEffects.Add(JWTAG_EVENT_CHARACTER_HEAVYHIT, nullptr);
-	m_DamageEffects.Add(JWTAG_EVENT_CHARACTER_FLOAT, nullptr);
-	m_DamageEffects.Add(JWTAG_EVENT_CHARACTER_STUN, nullptr);
-	m_DamageEffects.Add(JWTAG_EVENT_CHARACTER_THUNDER, nullptr);
+	m_DamageBuffEffects.Add(JWTAG_EVENT_CHARACTER_LIGTHHIT, nullptr);
+	m_DamageBuffEffects.Add(JWTAG_EVENT_CHARACTER_HEAVYHIT, nullptr);
+	m_DamageBuffEffects.Add(JWTAG_EVENT_CHARACTER_FLOAT, nullptr);
+	m_DamageBuffEffects.Add(JWTAG_EVENT_CHARACTER_STUN, nullptr);
+	m_DamageBuffEffects.Add(JWTAG_EVENT_CHARACTER_THUNDER, nullptr);
 
-	m_GameplayCues.Add(JWTAG_EVENT_CHARACTER_LIGTHHIT, FGameplayTag::EmptyTag);
-	m_GameplayCues.Add(JWTAG_EVENT_CHARACTER_HEAVYHIT, FGameplayTag::EmptyTag);
-	m_GameplayCues.Add(JWTAG_EVENT_CHARACTER_FLOAT, FGameplayTag::EmptyTag);
-	m_GameplayCues.Add(JWTAG_EVENT_CHARACTER_STUN, FGameplayTag::EmptyTag);
-	m_GameplayCues.Add(JWTAG_EVENT_CHARACTER_THUNDER, FGameplayTag::EmptyTag);
+	m_GameplayCues_Effect.Add(JWTAG_EVENT_CHARACTER_LIGTHHIT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Effect.Add(JWTAG_EVENT_CHARACTER_HEAVYHIT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Effect.Add(JWTAG_EVENT_CHARACTER_FLOAT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Effect.Add(JWTAG_EVENT_CHARACTER_STUN, FGameplayTag::EmptyTag);
+	m_GameplayCues_Effect.Add(JWTAG_EVENT_CHARACTER_THUNDER, FGameplayTag::EmptyTag);
 
+	m_GameplayCues_Sound.Add(JWTAG_EVENT_CHARACTER_LIGTHHIT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Sound.Add(JWTAG_EVENT_CHARACTER_HEAVYHIT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Sound.Add(JWTAG_EVENT_CHARACTER_FLOAT, FGameplayTag::EmptyTag);
+	m_GameplayCues_Sound.Add(JWTAG_EVENT_CHARACTER_STUN, FGameplayTag::EmptyTag);
+	m_GameplayCues_Sound.Add(JWTAG_EVENT_CHARACTER_THUNDER, FGameplayTag::EmptyTag);
 }
 
 void UGA_SkillHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, const FGameplayEventData* TriggerEventData)
@@ -53,12 +58,16 @@ void UGA_SkillHitCheck::ActivateAbility(const FGameplayAbilitySpecHandle Handle,
 	ApplyAbilityTask();
 }
 
+
 void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHandle& TargetDataHandle)
 {
-
-
 	UAbilitySystemComponent* SourceASC = GetAbilitySystemComponentFromActorInfo_Ensured();
 	if (SourceASC == nullptr) return;
+
+	// 타게팅 시스템 가져오기
+	UTargetSystemComponent* TargetSystemComponent = CastChecked<ACharacter>(SourceASC->GetAvatarActor())->FindComponentByClass<UTargetSystemComponent>();
+	if (TargetSystemComponent == nullptr) return;
+
 
 	// HitResult가 있는 경우
 	if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
@@ -67,33 +76,51 @@ void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHa
 		UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(HitResult.GetActor());
 		if (TargetASC == nullptr) return;
 
-		// GameplayEvent  HitReact 전달
-		FGameplayEventData PayloadData;
-		PayloadData.EventMagnitude = m_CurrentLevel;
-		PayloadData.Instigator = SourceASC->GetAvatarActor();
-		PayloadData.TargetTags = m_ReceivedTags; // 받은 태그 전달
-		UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), JWTAG_SHARED_EVENT_HITREACT, PayloadData);
+		// 타게팅 시스템에 등록
+		TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), HitResult.GetActor());
 
-		// Damage Effects 적용
+		//Damage Effect 적용 
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(m_DamageEffect, m_CurrentLevel);
+		if(SpecHandle.IsValid())
+		{
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetDataHandle);
+		}
+
+		// Damage Buff Effects 적용
 		FGameplayEffectContextHandle ContextHandle;
 		for (const FGameplayTag ReceivedTag : m_ReceivedTags)
 		{
-			if (m_DamageEffects.Contains(ReceivedTag) == true)
+			if (m_DamageBuffEffects.Contains(ReceivedTag) == true)
 			{
-				FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(*(m_DamageEffects.Find(ReceivedTag)), m_CurrentLevel);
-				if (SpecHandle.IsValid())
+				FGameplayEffectSpecHandle BuffSpecHandle = MakeOutgoingGameplayEffectSpec(*(m_DamageBuffEffects.Find(ReceivedTag)), m_CurrentLevel);
+				if (BuffSpecHandle.IsValid())
 				{
-					ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetDataHandle);
+					const TArray<FActiveGameplayEffectHandle> ActiveEffectHandles = ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, BuffSpecHandle, TargetDataHandle);
+					if (ActiveEffectHandles.IsEmpty() == false)
+					{
+						// GameplayEvent  HitReact 전달 
+						FGameplayEventData PayloadData;
+						PayloadData.EventMagnitude = m_CurrentLevel;
+						PayloadData.Instigator = SourceASC->GetAvatarActor();
+						PayloadData.TargetTags = m_ReceivedTags; // 받은 태그 전달
+						UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(HitResult.GetActor(), JWTAG_SHARED_EVENT_HITREACT, PayloadData);
+					}
+
 
 					// Cue 실행		// 여기에 있는 큐는 게임플레이 이펙트랑 독립적으로 실행되는 큐.		// 이펙트의 성공 여부로 실행되는 큐는 이펙트 안에서 설정해주고 있다. 
-					ContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(SpecHandle);
+					ContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(BuffSpecHandle);
 					ContextHandle.AddHitResult(HitResult);
 					ContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
-					SpecHandle.Data->SetContext(ContextHandle);
+					ContextHandle.AddInstigator(SourceASC->GetAvatarActor(), SourceASC->GetAvatarActor());
+					BuffSpecHandle.Data->SetContext(ContextHandle);
 
-					if (m_GameplayCues.Contains(ReceivedTag) == true)
+					if (m_GameplayCues_Effect.Contains(ReceivedTag) == true)
 					{
-						TargetASC->ExecuteGameplayCue(*m_GameplayCues.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
+						TargetASC->ExecuteGameplayCue(*m_GameplayCues_Effect.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
+					}
+					if (m_GameplayCues_Sound.Contains(ReceivedTag) == true)
+					{
+						SourceASC->ExecuteGameplayCue(*m_GameplayCues_Sound.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
 					}
 				}
 			}
@@ -111,32 +138,50 @@ void UGA_SkillHitCheck::OnSkillResultCallback(const FGameplayAbilityTargetDataHa
 	// Actor만 있는 경우 ( Overlap 등 ) 
 	else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
 	{
-		for (auto& Actor : TargetDataHandle.Data[0].Get()->GetActors())
+		//Damage Effect 적용 
+		FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(m_DamageEffect, m_CurrentLevel);
+		if (SpecHandle.IsValid())
 		{
-			// GameplayEvent  HitReact 전달
-			FGameplayEventData PayloadData;
-			PayloadData.EventMagnitude = m_CurrentLevel;
-			PayloadData.Instigator = SourceASC->GetAvatarActor();
-			PayloadData.TargetTags = m_ReceivedTags; // 받은 태그 전달
-			UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Actor.Get(), JWTAG_SHARED_EVENT_HITREACT, PayloadData);
+			ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetDataHandle);
 		}
 
 		for (const FGameplayTag ReceivedTag : m_ReceivedTags)
 		{
-			if (m_DamageEffects.Contains(ReceivedTag) == true)
+			if (m_DamageBuffEffects.Contains(ReceivedTag) == true)
 			{
-				FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(*(m_DamageEffects.Find(ReceivedTag)), m_CurrentLevel);
-				if (SpecHandle.IsValid())
+				FGameplayEffectSpecHandle BuffSpecHandle = MakeOutgoingGameplayEffectSpec(*(m_DamageBuffEffects.Find(ReceivedTag)), m_CurrentLevel);
+				if (BuffSpecHandle.IsValid())
 				{
-					ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle, TargetDataHandle);
-
-					FGameplayEffectContextHandle ContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(SpecHandle);
-					ContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
-					SpecHandle.Data->SetContext(ContextHandle);
-
-					if (m_GameplayCues.Contains(ReceivedTag) == true)
+					const TArray<FActiveGameplayEffectHandle> ActiveEffectHandles = ApplyGameplayEffectSpecToTarget(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, BuffSpecHandle, TargetDataHandle);
+					if (ActiveEffectHandles.IsEmpty() == false)
 					{
-						SourceASC->ExecuteGameplayCue(*m_GameplayCues.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
+						for (auto& Actor : TargetDataHandle.Data[0].Get()->GetActors())
+						{
+							// 타게팅 시스템에 등록
+							TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), Actor.Get());
+
+							// GameplayEvent  HitReact 전달 
+							FGameplayEventData PayloadData;
+							PayloadData.EventMagnitude = m_CurrentLevel;
+							PayloadData.Instigator = SourceASC->GetAvatarActor();
+							PayloadData.TargetTags = m_ReceivedTags; // 받은 태그 전달
+							UAbilitySystemBlueprintLibrary::SendGameplayEventToActor(Actor.Get(), JWTAG_SHARED_EVENT_HITREACT, PayloadData);
+						}
+					}
+
+					FGameplayEffectContextHandle ContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(BuffSpecHandle);
+					ContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
+					ContextHandle.AddInstigator(SourceASC->GetAvatarActor(), SourceASC->GetAvatarActor());
+					BuffSpecHandle.Data->SetContext(ContextHandle);
+
+					if (m_GameplayCues_Effect.Contains(ReceivedTag) == true)
+					{
+						SourceASC->ExecuteGameplayCue(*m_GameplayCues_Effect.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
+					}
+
+					if (m_GameplayCues_Sound.Contains(ReceivedTag) == true)
+					{
+						SourceASC->ExecuteGameplayCue(*m_GameplayCues_Sound.Find(ReceivedTag), FGameplayCueParameters(ContextHandle));
 					}
 				}
 			}

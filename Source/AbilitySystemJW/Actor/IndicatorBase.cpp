@@ -3,6 +3,8 @@
 
 #include "Actor/IndicatorBase.h"
 #include "Components/StaticMeshComponent.h"
+#include "Materials/MaterialInstanceDynamic.h"
+#include "Components/DecalComponent.h"
 
 // Sets default values
 AIndicatorBase::AIndicatorBase()
@@ -17,42 +19,44 @@ AIndicatorBase::AIndicatorBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-    // RootComponent 생성
-    RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
-    // StaticMeshComponent 생성 및 Root에 붙이기
-    m_IndicatorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("IndicatorMesh"));
-    m_IndicatorMesh->SetupAttachment(RootComponent);
+    // // RootComponent 생성
+    // RootComponent = CreateDefaultSubobject<USceneComponent>(TEXT("RootComponent"));
+    // // StaticMeshComponent 생성 및 Root에 붙이기
+    // m_IndicatorMesh = CreateDefaultSubobject<UStaticMeshComponent>(TEXT("IndicatorMesh"));
+    // m_IndicatorMesh->SetupAttachment(RootComponent);
+    // 
+    // // 충돌 설정 (필요에 따라 변경)
+    // m_IndicatorMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // 
+    // // 평면으로 설정.
+    // static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(TEXT("/Engine/BasicShapes/Plane.Plane"));
+    // if (PlaneMesh.Succeeded())
+    // {
+    //     m_IndicatorMesh->SetStaticMesh(PlaneMesh.Object);
+    // }
 
-    // 충돌 설정 (필요에 따라 변경)
-    m_IndicatorMesh->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+    // // 원하는 절대 크기 (cm 단위)
+    // FVector DesiredSize(100.0f, 100.0f, 100.0f);
+    //
+    // // 메시의 기본 Bounds 가져오기
+    // FBoxSphereBounds Bounds = m_IndicatorMesh->GetStaticMesh()->GetBounds();
+    // FVector MeshSize = Bounds.BoxExtent * 2.0f; // BoxExtent는 반지름이므로 *2 해서 전체 길이
+    //
+    // // 스케일 비율 계산
+    // FVector ScaleFactor = DesiredSize / MeshSize;
+    //
+    // // 스케일 적용
+    // m_IndicatorMesh->SetWorldScale3D(ScaleFactor);
 
-    // 평면으로 설정.
-    static ConstructorHelpers::FObjectFinder<UStaticMesh> PlaneMesh(TEXT("/Engine/BasicShapes/Plane.Plane"));
-    if (PlaneMesh.Succeeded())
-    {
-        m_IndicatorMesh->SetStaticMesh(PlaneMesh.Object);
-    }
-
-    // 원하는 절대 크기 (cm 단위)
-    FVector DesiredSize(100.0f, 100.0f, 100.0f);
-
-    // 메시의 기본 Bounds 가져오기
-    FBoxSphereBounds Bounds = m_IndicatorMesh->GetStaticMesh()->GetBounds();
-    FVector MeshSize = Bounds.BoxExtent * 2.0f; // BoxExtent는 반지름이므로 *2 해서 전체 길이
-
-    // 스케일 비율 계산
-    FVector ScaleFactor = DesiredSize / MeshSize;
-
-    // 스케일 적용
-    m_IndicatorMesh->SetWorldScale3D(ScaleFactor);
-
+    // (임시) Dacal 크기를 어디서 가져올 것인가 ? 아직 미정이다. 
+    GetDecal()->DecalSize;
 }
 
 // Called when the game starts or when spawned
 void AIndicatorBase::BeginPlay()
 {
 	Super::BeginPlay();
-    m_DynMat = m_IndicatorMesh->CreateAndSetMaterialInstanceDynamic(0);
+    m_DynMat = CreateDynamicMaterialInstance();
 	
     GetWorld()->GetTimerManager().SetTimer(m_UpdateTimer, this,&AIndicatorBase::Update_MI, m_UpdateSecond, true);
 }
@@ -61,7 +65,6 @@ void AIndicatorBase::SetGauge_MI(float MaxGauge,float MinGauge)
 {
     //MaxGauge = FMath::Frac(MaxGauge);
     //MinGauge = FMath::Frac(MinGauge);
-
 
     m_MaxGauge = MaxGauge;
 
@@ -76,7 +79,6 @@ void AIndicatorBase::SetGauge_MI(float MaxGauge,float MinGauge)
         m_DynMat->SetScalarParameterValue(FName(TEXT("Outer Radius")), m_MaxGauge);
         m_DynMat->SetScalarParameterValue(FName(TEXT("Inner Radius")), m_MinGauge);
     }
-
 }
 
 void AIndicatorBase::SetDegree_MI(float Degree)
@@ -87,7 +89,6 @@ void AIndicatorBase::SetDegree_MI(float Degree)
         
         m_DynMat->SetScalarParameterValue(FName(TEXT("Degree")), m_Degree);
     }
-
 }
 
 void AIndicatorBase::SetGaugeSpeed_MI(float UpdateSecond)

@@ -96,7 +96,6 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
         //    nullptr
         //);
 
-
         UAbilitySystemComponent* SourceASC = CastChecked<IAbilitySystemInterface>(GetOwner())->GetAbilitySystemComponent();
         UAbilitySystemComponent* TargetASC = UAbilitySystemBlueprintLibrary::GetAbilitySystemComponent(OtherActor);
 
@@ -126,10 +125,11 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
             FGameplayEffectContextHandle Context = SourceASC->MakeEffectContext();
             Context.AddHitResult(OutHitResult);
             Context.AddInstigator(SourceASC->GetAvatarActor(), GetOwner());
-
+            
             FGameplayEffectSpecHandle SpecHandle = SourceASC->MakeOutgoingSpec(m_HitDamageEffect, 1.f, Context);
             if (SpecHandle.IsValid())
             {
+                //SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Data.Charging"), m_Damage);
                 TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
                 Debug::Print(TEXT("Ranged Hit !!!"), FColor::Orange);
             }

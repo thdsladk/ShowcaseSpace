@@ -53,7 +53,7 @@ protected:
 
 	// 실행할 GameplayCue들
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Cues", meta = (Categories = "GameplayCue"))
-	TArray<FGameplayTag> m_GameplayCues;
+	TArray<FGameplayTag> m_GameplayCues_Effect;
 	UPROPERTY(EditAnywhere, Category = "TargetActor")
 	TSubclassOf<ATA_Base> m_TargetActorClass;
 

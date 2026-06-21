@@ -20,14 +20,8 @@ void ATA_Base::StartTargeting(UGameplayAbility* Ability)
 		BindToConfirmCancelInputs();
 	}
 
-	if (m_WorldRecticleClass != nullptr)
-	{
-		// World Recticle Section
-		m_WorldRecticle = GetWorld()->SpawnActorDeferred<AAOEBase>(m_WorldRecticleClass, FTransform::Identity, SourceActor, CastChecked<APawn>(SourceActor), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
-		FVector SpawnLocation = SourceActor->GetActorLocation();// +SourceActor->GetActorForwardVector();
-		FTransform SpawnTransform(SourceActor->GetActorRotation(), SpawnLocation);
-		m_WorldRecticle->FinishSpawning(SpawnTransform);
-	}
+
+	
 }
 
 void ATA_Base::ConfirmTargetingAndContinue()
@@ -40,6 +34,12 @@ void ATA_Base::ConfirmTargetingAndContinue()
 	{
 		m_WorldRecticle->Destroy();
 		m_WorldRecticle = nullptr;
+	}
+
+	if(m_ScopeRecticle != nullptr)
+	{
+		m_ScopeRecticle->Destroy();
+		m_ScopeRecticle = nullptr;
 	}
 }
 

@@ -58,9 +58,6 @@ bool UCharacterAttributeSet::PreGameplayEffectExecute(FGameplayEffectModCallback
 
 			// (임시) 과연 오버헤드 위치가 문제가 없을지... 
 			OwnerActor->PlayDamageFont(Data.EvaluatedData.Magnitude, OwnerActor->GetMesh()->GetSocketLocation(TEXT("OverHead")));
-			// (임시) 여기서 넉백도 재생하도록 해보자.     히트 리액트에서 넉백도 제어하도록 GA_ReactBase로 옮김.
-			//OwnerActor->GetPhysicsMotionSystemComponent()->PlayKnockBack();
-
 		}
 	}
 

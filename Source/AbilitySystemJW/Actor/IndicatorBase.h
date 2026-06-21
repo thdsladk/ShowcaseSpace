@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "GameFramework/Actor.h"
+#include "Engine/DecalActor.h"
 #include "IndicatorBase.generated.h"
 
 UENUM()
@@ -15,7 +15,7 @@ enum class EIndicatorShape : uint8
 };
 
 UCLASS()
-class ABILITYSYSTEMJW_API AIndicatorBase : public AActor
+class ABILITYSYSTEMJW_API AIndicatorBase : public ADecalActor
 {
 	GENERATED_BODY()
 	
@@ -23,9 +23,6 @@ public:
 	// Sets default values for this actor's properties
 
 	AIndicatorBase();
-
-	UFUNCTION(BlueprintCallable, Category = "Indicator")
-	UStaticMeshComponent* GetIndicatorMesh() const { return m_IndicatorMesh; }
 
 public:
 	FORCEINLINE uint8 GetIndicatorShape() const { return uint8(m_IndicatorShape); }
@@ -76,6 +73,7 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Material")
 	EIndicatorShape m_IndicatorShape;
 
+private:
 	FTimerHandle m_UpdateTimer;
 
 #pragma endregion

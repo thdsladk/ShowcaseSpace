@@ -51,6 +51,10 @@
 
 #define JWTAG_CHARACTER_NATIVEHEAL FGameplayTag::RequestGameplayTag(FName("Character.Action.NativeHeal"))
 #define JWTAG_CHARACTER_LINKEDACTION FGameplayTag::RequestGameplayTag(FName("Character.Action.LinkedAction"))
+#define JWTAG_CHARACTER_ACTION_SKILLQ FGameplayTag::RequestGameplayTag(FName("Character.Action.SkillQ"))
+#define JWTAG_CHARACTER_ACTION_SKILLE FGameplayTag::RequestGameplayTag(FName("Character.Action.SkillE")) 
+#define JWTAG_CHARACTER_ACTION_SKILLR FGameplayTag::RequestGameplayTag(FName("Character.Action.SkillR")) 
+#define JWTAG_CHARACTER_ACTION_SKILLX FGameplayTag::RequestGameplayTag(FName("Character.Action.SkillX")) 
 
 #define JWTAG_CHARACTER_SKILL_AROUND FGameplayTag::RequestGameplayTag(FName("Character.Skill.Around"))
 #define JWTAG_CHARACTER_SKILL_STUN FGameplayTag::RequestGameplayTag(FName("Character.Skill.Stun"))

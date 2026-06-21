@@ -9,30 +9,30 @@
 /**
  * 
  */
-UCLASS()
+UCLASS(BlueprintType)
 class ABILITYSYSTEMJW_API UDA_SkillData : public UPrimaryDataAsset
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, Category = "Name")
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Name")
 	FName SkillName;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float Range;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float Width;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float AttackRate;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float EnergyCost;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float CastDelay;
 
-    UPROPERTY(EditAnywhere, Category = "Value")
+    UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Value")
     float CastTime;
 
     UPROPERTY(EditAnywhere, Category = "Texture")

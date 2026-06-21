@@ -163,10 +163,11 @@ void AGASNPCharacter::Tick(float DeltaSeconds)
 */
 void AGASNPCharacter::OnOutOfHealth()
 {
-	if (m_AbilitySystemComponent != nullptr)
-	{
-		m_AbilitySystemComponent->AddLooseGameplayTag(JWTAG_CHARACTER_ISDEAD);
-	}
+	// 어트리뷰트에서 이미 부여하고 있어서 제거한다. 
+	//if (m_AbilitySystemComponent != nullptr)
+	//{
+	//	m_AbilitySystemComponent->AddLooseGameplayTag(JWTAG_CHARACTER_ISDEAD);
+	//}
 
 	if (m_GaugeBar != nullptr)
 	{

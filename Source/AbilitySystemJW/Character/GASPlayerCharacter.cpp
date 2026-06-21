@@ -366,10 +366,11 @@ void AGASPlayerCharacter::GASInputQuateMove(const FVector2D& Value, int32 InputI
 */
 void AGASPlayerCharacter::OnOutOfHealth()
 {
-	if (m_AbilitySystemComponent != nullptr)
-	{
-		m_AbilitySystemComponent->AddLooseGameplayTag(JWTAG_CHARACTER_ISDEAD);
-	}
+	// 어트리뷰트에서 이미 부여하고 있어서 제거한다.
+	//if (m_AbilitySystemComponent != nullptr)
+	//{
+	//	m_AbilitySystemComponent->AddLooseGameplayTag(JWTAG_CHARACTER_ISDEAD);
+	//}
 	// AnimInstance의 델리게이트를 바인딩하기
 	CastChecked<IAnimNotifyInterface>(GetMesh()->GetAnimInstance())->GetDeathPoint().AddUObject(this, &AGASPlayerCharacter::DeathEnded);
 

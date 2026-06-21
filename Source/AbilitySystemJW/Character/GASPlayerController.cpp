@@ -109,7 +109,7 @@ void AGASPlayerController::SetupInputComponent()
 		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::Dodge], ETriggerEvent::Triggered, this, &AGASPlayerController::GASInputPressed, int32(EInputAbilityID::Dodge));
 
 		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::ChangeCombatMode], ETriggerEvent::Triggered, this, &AGASPlayerController::GASInputPressed, int32(EInputAbilityID::ChangeCombatMode));
-		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::RangeAttack], ETriggerEvent::Triggered, this, &AGASPlayerController::GASInputPressed, int32(EInputAbilityID::RangeAttack));
+		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::RangeAttack], ETriggerEvent::Started, this, &AGASPlayerController::GASInputPressed, int32(EInputAbilityID::RangeAttack));
 		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::RangeAttack], ETriggerEvent::Triggered, this, &AGASPlayerController::GASInputReleased, int32(EInputAbilityID::RangeAttack));
 		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::Defense], ETriggerEvent::Started, this, &AGASPlayerController::GASInputPressed, int32(EInputAbilityID::Defense));
 		EnhancedInputComponent->BindAction(m_ClickActions_AbilityInputID[EInputAbilityID::Defense], ETriggerEvent::Triggered, this, &AGASPlayerController::GASInputReleased, int32(EInputAbilityID::Defense));

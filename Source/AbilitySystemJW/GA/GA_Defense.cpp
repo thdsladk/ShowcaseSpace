@@ -54,8 +54,6 @@ void UGA_Defense::InputReleased(const FGameplayAbilitySpecHandle Handle, const F
 	{
 		// 여기서 방어중일때 패링 모션이 나올지 방어 해제 모션이 나올지를 정해야한다 .
 		m_IsDefending = false;
-		//ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
-		//UAnimInstanceBase* AnimInstance = CastChecked<UAnimInstanceBase>(Character->GetMesh()->GetAnimInstance());
 
 		const FVector& OwnerLocation = CurrentActorInfo->AvatarActor->GetActorLocation();
 		const FRotator& OwnerRotation = CurrentActorInfo->AvatarActor->GetActorRotation();

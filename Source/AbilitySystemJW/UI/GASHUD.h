@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "UI/GASUserWidget.h"
+#include "GameplayTagContainer.h"
 #include "GASHUD.generated.h"
 
 class USlotBaseWidget;
@@ -23,10 +24,15 @@ public:
 	UGASHUD();
 	virtual void NativeConstruct() override;
 
-	void SkillQ(const FGameplayEventData* Payload);
-	void SkillE(const FGameplayEventData* Payload);
-	void SkillR(const FGameplayEventData* Payload);
-	void SkillX(const FGameplayEventData* Payload);
+	//void SkillQ(const FGameplayEventData* Payload);
+	//void SkillE(const FGameplayEventData* Payload);
+	//void SkillR(const FGameplayEventData* Payload);
+	//void SkillX(const FGameplayEventData* Payload);
+	void SkillQ(const FGameplayTag Tag, int32 NewCount);
+	void SkillE(const FGameplayTag Tag, int32 NewCount);
+	void SkillR(const FGameplayTag Tag, int32 NewCount);
+	void SkillX(const FGameplayTag Tag, int32 NewCount);
+
 protected:
 	UPROPERTY(meta = (BindWidget))
 	USlotBaseWidget* SkillSlotQ;

@@ -96,6 +96,9 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Effect")
 	TSubclassOf<UGameplayEffect> m_InitSkillEffect;
 
+
+
+
 #pragma region TargetActor Members
 protected:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "TargetActor")
@@ -110,7 +113,6 @@ protected:
 	TEnumAsByte<EGameplayTargetingConfirmation::Type>  m_ConfirmationType;
 
 #pragma endregion
-
 
 protected:
 	uint8 m_OriginMovementMode;

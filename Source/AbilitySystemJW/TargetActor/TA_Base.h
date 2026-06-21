@@ -33,5 +33,9 @@ protected:
 	TSubclassOf<AAOEBase> m_WorldRecticleClass;
 	TObjectPtr<AAOEBase> m_WorldRecticle;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "WorldRecticle", meta = (ExposeOnSpawn = "true", AllowPrivateAccess = "true"))
+	TSubclassOf<AAOEBase> m_ScopeRecticleClass;
+	TObjectPtr<AAOEBase> m_ScopeRecticle;
+
 	TEnumAsByte<EGameplayTargetingConfirmation::Type> m_ConfirmationType;
 };

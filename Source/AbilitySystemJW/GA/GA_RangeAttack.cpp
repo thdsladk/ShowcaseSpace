@@ -18,10 +18,9 @@
 
 #include "AbilitySystemJW.h"
 
-UGA_RangeAttack::UGA_RangeAttack()
-	: m_ChargingGauge(0.f)
-	, m_ShootState(uint8(EShootState::Stop))
-	, m_IsInputRelease(false)
+UGA_RangeAttack::UGA_RangeAttack() :
+	m_ShootState(uint8(EShootState::Stop)),
+	m_IsInputRelease(false)
 {
 	InstancingPolicy = EGameplayAbilityInstancingPolicy::InstancedPerActor;
 }
@@ -39,6 +38,13 @@ void UGA_RangeAttack::ActivateAbility(const FGameplayAbilitySpecHandle Handle, c
 	WI->SetRangeGaugeBar_Implementation(true);
 	
 	IncreaseState();
+
+	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo_Ensured();
+	if (ASC != nullptr)
+	{
+		// 값을 초기화.
+		ASC->ApplyModToAttribute(UCharacterAttributeSet::GetChargeGaugeAttribute(), EGameplayModOp::Override, 0.f);
+	}
 
 	// Bind Delegate
 	FOnEndSection Delegate;
@@ -70,11 +76,8 @@ void UGA_RangeAttack::InputReleased(const FGameplayAbilitySpecHandle Handle, con
 	if (m_ShootState == uint8(EShootState::Charge))
 	{
 		// 여기서 Charge -> Shot으로 넘어가서 중간 정지에 대한 처리를 해줘야한다.
-		ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
-		UAnimInstanceBase* AnimInstance = CastChecked<UAnimInstanceBase>(Character->GetMesh()->GetAnimInstance());
 		IncreaseState();
-		AnimInstance->Montage_JumpToSection(GetNextSection(), GetCurrentMontage());
-
+		MontageJumpToSection(GetNextSection());
 	}
 
 
@@ -83,7 +86,7 @@ void UGA_RangeAttack::InputReleased(const FGameplayAbilitySpecHandle Handle, con
 void UGA_RangeAttack::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
 {
 	Super::CancelAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility);
-
+	EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateCancelAbility, true);
 }
 
 void UGA_RangeAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateEndAbility, bool bWasCancelled)
@@ -91,21 +94,13 @@ void UGA_RangeAttack::EndAbility(const FGameplayAbilitySpecHandle Handle, const 
 	Super::EndAbility(Handle, ActorInfo, ActivationInfo, bReplicateEndAbility, bWasCancelled);
 
 	MontageStop(0.25f);
-
-	m_ChargingGauge = 0.f;
-
 	// Set Charging Gauge from AttributeSet
 	UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo_Ensured();
 	if (ASC != nullptr)
 	{
-		ASC->ApplyModToAttribute(
-			UCharacterAttributeSet::GetChargeGaugeAttribute(), // Attribute
-			EGameplayModOp::Override,                          // 연산 방식
-			m_ChargingGauge                                    // 값
-		);
-
 		// Clear RangedCharge Effect
-		ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer{ JWTAG_CHARACTER_BUFF_RANGEDCHARGE });
+		//ASC->RemoveActiveEffectsWithTags(FGameplayTagContainer{ JWTAG_CHARACTER_BUFF_RANGEDCHARGE });
+		ASC->RemoveActiveGameplayEffect(m_GaugeActiveEffectHandle);
 	}
 	
 	m_IsInputRelease = false;
@@ -167,10 +162,6 @@ FName UGA_RangeAttack::GetNextSection()
 void UGA_RangeAttack::EndSection()
 {
 	// 각 세션이 끝날때 마다 호출 
-
-	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
-	UAnimInstanceBase* AnimInstance = CastChecked<UAnimInstanceBase>(Character->GetMesh()->GetAnimInstance());
-
 	switch (m_ShootState)
 	{
 		case uint8(EShootState::Draw):
@@ -179,17 +170,16 @@ void UGA_RangeAttack::EndSection()
 			if (m_IsInputRelease == true)
 			{
 				m_ShootState = uint8(EShootState::Shot);
-				AnimInstance->Montage_JumpToSection(GetNextSection(), GetCurrentMontage());
+				MontageJumpToSection(GetNextSection());
 			}
 			else
 			{
 				IncreaseState();
-
 				// Send GameplayEffect to increase Gauge
 				FGameplayEffectSpecHandle SpecHandle = MakeOutgoingGameplayEffectSpec(m_GaugeEffectClass);
 				if (SpecHandle.IsValid())
 				{
-					ApplyGameplayEffectSpecToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle);
+					m_GaugeActiveEffectHandle = ApplyGameplayEffectSpecToOwner(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, SpecHandle);
 				}
 			}
 			break;
@@ -198,7 +188,6 @@ void UGA_RangeAttack::EndSection()
 		{
 			IncreaseState();
 
-			GetWorld()->GetTimerManager().ClearTimer(m_ChargingTimerHandle);
 			break;
 		}
 		case uint8(EShootState::Shot):
@@ -220,12 +209,16 @@ void UGA_RangeAttack::ShootProjectile()
 	if (UAnimMontage* Montage = GetCurrentMontage())
 	{
 		const int32 SectionIndex = Montage->GetSectionIndex(FName("OverDraw"));
-	
+		float ChargingGauge = 0.f;
+
 		if (SectionIndex != INDEX_NONE)
 		{
 			// Set Charging Gauge from AttributeSet
 			UAbilitySystemComponent* ASC = GetAbilitySystemComponentFromActorInfo_Ensured();
-			m_ChargingGauge = ASC->GetSet<UCharacterAttributeSet>()->GetChargeGauge();
+			if (ASC != nullptr)
+			{
+				ChargingGauge = ASC->GetSet<UCharacterAttributeSet>()->GetChargeGauge();
+			}
 		}
 
 		const FName SocketName = TEXT("SpawnPoint_Arrow");
@@ -237,16 +230,16 @@ void UGA_RangeAttack::ShootProjectile()
 		const UTargetSystemComponent* TargetSystemComp = Character->FindComponentByClass<UTargetSystemComponent>();
 		if (TargetSystemComp == nullptr) return;
 		
-		AActor* TargetActor = TargetSystemComp->GetTargetActor();
+		const AActor* AutoTargetActor = TargetSystemComp->GetAutoTarget();
 		// (임시) 하드코딩으로 활 소켓 방향 잡아주고 있다...
 		// Z축(Yaw 회전축) 기준으로 회전 쿼터니언 생성
 
 		FRotator ResultRotator = UJWFunctionLibrary::ComputeLookAtRotationFromMouse(Character);
 		FVector ProjectileDirection = ResultRotator.Vector();
 
-		if (TargetActor != nullptr)
+		if (AutoTargetActor != nullptr)
 		{
-			const FVector Target_Head = CastChecked<ACharacter>(TargetActor)->GetMesh()->GetSocketLocation(FName(TEXT("Head")));
+			const FVector Target_Head = CastChecked<ACharacter>(AutoTargetActor)->GetMesh()->GetSocketLocation(FName(TEXT("Head")));
 			const FVector Character_LeftHand = Character->GetMesh()->GetSocketLocation(SocketName);
 			ProjectileDirection.Z = (Target_Head - Character_LeftHand).GetSafeNormal().Z;
 			
@@ -255,7 +248,7 @@ void UGA_RangeAttack::ShootProjectile()
 			if (Projectile != nullptr)
 			{
 				Projectile->SetOwner(Character);
-				Projectile->FireInDirection(ProjectileDirection, m_ChargingGauge);
+				Projectile->FireInDirection(ProjectileDirection, ChargingGauge);
 			}
 		}
 		else
@@ -266,7 +259,7 @@ void UGA_RangeAttack::ShootProjectile()
 			if (Projectile != nullptr)
 			{
 				Projectile->SetOwner(Character);
-				Projectile->FireInDirection(ProjectileDirection, m_ChargingGauge);
+				Projectile->FireInDirection(ProjectileDirection, ChargingGauge);
 			}
 		}
 	}

@@ -12,6 +12,8 @@
 #include "FunctionLibrary/JWFunctionLibrary.h"
 #include "CharacterComponents/TargetSystemComponent.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "Actor/AOEBase.h"
+#include "Components/DecalComponent.h"
 
 
 #include "GameFramework/Character.h"
@@ -43,6 +45,29 @@ void ATA_Skill::StartTargeting(UGameplayAbility* Ability)
 	CalculateTargetAttributeType();
 	CalculateStartLocation();
 	CalculateTargetType();
+
+	if (m_WorldRecticleClass != nullptr)
+	{
+		// World Recticle Section
+		m_WorldRecticle = GetWorld()->SpawnActorDeferred<AAOEBase>(m_WorldRecticleClass, FTransform::Identity, SourceActor, CastChecked<APawn>(SourceActor), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		m_WorldRecticle->SetScope(m_Range);
+		FVector SpawnLocation = SourceActor->GetActorLocation();// +SourceActor->GetActorForwardVector();
+		FTransform SpawnTransform(SourceActor->GetActorRotation(), SpawnLocation);
+		m_WorldRecticle->FinishSpawning(SpawnTransform);
+	}
+
+
+	if (m_ScopeRecticleClass != nullptr)
+	{
+		// Scope Recticle Section
+		m_ScopeRecticle = GetWorld()->SpawnActorDeferred<AAOEBase>(m_ScopeRecticleClass, FTransform::Identity, SourceActor, CastChecked<APawn>(SourceActor), ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
+		m_ScopeRecticle->GetDecal()->DecalSize = FVector(100.f, m_Range, m_Range);
+		//m_ScopeRecticle->SetScope(m_Range); // ScopeRecticle은 설정 안해줘도 될듯하긴하지만 나중을 위해서 ...
+		FVector SpawnLocation = SourceActor->GetActorLocation();
+		FTransform SpawnTransform(SourceActor->GetActorRotation(), SpawnLocation);
+		m_ScopeRecticle->FinishSpawning(SpawnTransform);
+	}
+
 }
 
 void ATA_Skill::ConfirmTargeting()
@@ -62,6 +87,14 @@ void ATA_Skill::ConfirmTargeting()
 		}
 		case EGameplayTargetingConfirmation::UserConfirmed :
 		{
+			if (m_WorldRecticle != nullptr)
+			{
+				if (m_WorldRecticle->GetDecalColor() == 1U)
+				{
+					m_SuccessSkill = false;
+				}
+
+			}
 			ConfirmTargetingAndContinue();
 			break;
 		}
@@ -82,6 +115,12 @@ void ATA_Skill::ConfirmTargeting()
 void ATA_Skill::ConfirmTargetingAndContinue()
 {
 	Super::ConfirmTargetingAndContinue();
+	// 실패
+	if (m_SuccessSkill == false)
+	{
+		TargetDataReadyDelegate.Broadcast(FGameplayAbilityTargetDataHandle());
+		return;
+	}
 
 	ACharacter* Character = Cast<ACharacter>(SourceActor);
 	if (Character != nullptr)

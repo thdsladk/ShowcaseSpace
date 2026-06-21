@@ -61,7 +61,7 @@ protected:
 
 	// 데미지 값 (Data Asset에서 세팅 가능)
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")
-	float m_Damage = 20.f;
+	float m_Damage = 0.f;
 
 	// 수명
 	UPROPERTY(EditDefaultsOnly, Category = "Projectile")

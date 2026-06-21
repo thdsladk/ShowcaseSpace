@@ -127,7 +127,7 @@ void UGA_HitCheck::OnWeaponResultCallback_Implementation(const FGameplayAbilityT
 					ContextHandle.AddHitResult(HitResult);
 					ContextHandle.AddActors(TargetDataHandle.Data[0].Get()->GetActors(), false);
 
-					for (auto& CueTag : m_GameplayCues)
+					for (auto& CueTag : m_GameplayCues_Effect)
 					{
 						TargetASC->ExecuteGameplayCue(CueTag, FGameplayCueParameters(ContextHandle));
 					}
@@ -162,7 +162,7 @@ void UGA_HitCheck::OnWeaponResultCallback_Implementation(const FGameplayAbilityT
 					FGameplayEffectContextHandle ContextHandle = UAbilitySystemBlueprintLibrary::GetEffectContext(SpecHandle);
 					ContextHandle.AddActors(TargetDataHandle.Data[0]->GetActors(), false);
 
-					for (auto& CueTag : m_GameplayCues)
+					for (auto& CueTag : m_GameplayCues_Effect)
 					{
 						SourceASC->ExecuteGameplayCue(CueTag, FGameplayCueParameters(ContextHandle));
 					}

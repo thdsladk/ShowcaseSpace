@@ -20,6 +20,7 @@
 
 #include "MotionWarpingComponent.h"
 #include "CharacterComponents/TargetSystemComponent.h"
+#include "Components/DecalComponent.h"
 
 // Task 관련 헤더
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
@@ -153,6 +154,8 @@ void UGA_SkillBase::EndAbility(const FGameplayAbilitySpecHandle Handle, const FG
 	{
 		TSC->EndTargeting();
 	}
+
+
 }
 
 void UGA_SkillBase::OnCompleteCallback()
@@ -202,35 +205,6 @@ void UGA_SkillBase::PlaySkill_TargetData(const FGameplayAbilityTargetDataHandle&
 	// 타게팅 시스템을 통해서 타겟을 바라보도록 모션워핑 설정
 	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
 
-	// 타게팅 시스템에 등록. 
-	UTargetSystemComponent* TargetSystemComponent = Character->FindComponentByClass<UTargetSystemComponent>();
-	if(TargetSystemComponent != nullptr)
-	{
-		if (UAbilitySystemBlueprintLibrary::TargetDataHasHitResult(TargetDataHandle, 0))
-		{
-			FHitResult HitResult = UAbilitySystemBlueprintLibrary::GetHitResultFromTargetData(TargetDataHandle, 0);
-
-			TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), HitResult.GetActor());
-		}
-		else if (UAbilitySystemBlueprintLibrary::TargetDataHasActor(TargetDataHandle, 0))
-		{
-			for (auto& Target : TargetDataHandle.Data[0].Get()->GetActors())
-			{
-				TargetSystemComponent->AddTarget(TargetSystemComponent->GetTargetActor(), Target.Get());
-			}
-		}
-		else
-		{
-			CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
-			return;
-		}
-	}
-	else
-	{
-		CancelAbility(CurrentSpecHandle, CurrentActorInfo, CurrentActivationInfo, true);
-		return;
-	}
-
 	CalcMotionWarping(Character);
 
 	// 여기에서 Indicator로 넘어가자.
@@ -239,60 +213,49 @@ void UGA_SkillBase::PlaySkill_TargetData(const FGameplayAbilityTargetDataHandle&
 		// Indicator Section
 		m_Indicator = GetWorld()->SpawnActorDeferred<AIndicatorBase>(m_IndicatorClass, FTransform::Identity, Character, Character, ESpawnActorCollisionHandlingMethod::AlwaysSpawn);
 
+		FVector SpawnLocation = Character->GetActorLocation();
 		FVector DesiredSize(1.0, 1.0, 1.0);
-		// (임시) 상수로 표현중이지만 고쳐야한다. 0U은 Rectangle , 1U는 Circle로 표현할 예정.
-		// (임시) 스킬의 모양은 스킬 어트리뷰트를 써야할지 지금처럼 그냥 멤버로 들고있어야할지 
+		// 0U은 Rectangle , 1U는 Circle로 표현할 예정.
 		// 원하는 크기 절대값 (cm 단위)
 		if (m_Indicator->GetIndicatorShape() == 0U)
 		{
-			DesiredSize.X = m_SkillData->Range;
+			DesiredSize.X = 100.0;					// 이 값이 커야 바닥에 잘 붙는다.
 			DesiredSize.Y = m_SkillData->Width;
-			DesiredSize.Z = 1.0;
+			DesiredSize.Z = m_SkillData->Range;		
 		}
 		else
 		{
-			DesiredSize = DesiredSize * m_SkillData->Range;
-			DesiredSize.Z = 1.0;
+			//DesiredSize *= m_SkillData->Range;
+			DesiredSize.X = 100.0;
+			DesiredSize.Y = m_SkillData->Range;
+			DesiredSize.Z = m_SkillData->Range;
 		}
-		// 메시의 기본 Bounds 가져오기
-		const double DefaultSize = 100.0;
-		FVector ScaleFactor = DesiredSize / DefaultSize;
-		m_Indicator->GetIndicatorMesh()->SetWorldScale3D(ScaleFactor);
+		m_Indicator->GetDecal()->DecalSize = DesiredSize;
 		// SetLifeCycle
-		m_Indicator->SetLifeCycle(m_SkillData->CastDelay);
+		m_Indicator->SetLifeCycle(m_SkillData->CastTime);
 
-		ATA_Skill* TargetActor = Cast<ATA_Skill>(m_TargetSystemComp->GetTargetActor());
-		if (TargetActor != nullptr)
+		FRotator LookAtRotation = Character->GetActorRotation();
+		// 마우스 위치로 방향을 계산
+		if (m_ConfirmationType == EGameplayTargetingConfirmation::UserConfirmed)
 		{
-			FRotator LookAtRotation = Character->GetActorRotation();
-			// 마우스 위치로 방향을 계산
-			if (TargetActor->GetConfirmationType() == EGameplayTargetingConfirmation::UserConfirmed)
-			{
-				FVector DestPos = UJWFunctionLibrary::ComputePositionFromMouse(Character);
-				LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Character->GetActorLocation(), DestPos);
-			}
-
-			// 캐릭터 위치와 회전은 유지
-			FHitResult HitResult;
-			FVector Start = Character->GetActorLocation() + FVector{0.f,0.f,50.f};
-			// Rectangle 모양이면 위치를 보정
-			EIndicatorShape Shape = static_cast<EIndicatorShape>(m_Indicator->GetIndicatorShape());
-			if (Shape == EIndicatorShape::Rect)
-			{
-				Start += (LookAtRotation.Vector() * (m_Indicator->GetIndicatorMesh()->GetRelativeScale3D().X * m_SkillData->Range * 0.5f));	
-			}
-			FVector End = Start - FVector{ 0.f,0.f,1000.f };
-			UJWFunctionLibrary::CheckCollisionTrace_LineSingleByChannel(Character, Start, End, ECC_Visibility, HitResult, FName(TEXT("FloorTrace")));
-			const FVector SpawnLocation = HitResult.ImpactPoint + FVector{ 0.0f,0.0f,5.0f };
-
-			// 앞에서 계산한 ScaleFactor 사용
-			FTransform SpawnTransform(LookAtRotation, SpawnLocation, ScaleFactor);
-			m_Indicator->FinishSpawning(SpawnTransform);
-
-			m_IndicatorTask = UAbilityTask_WaitDelay::WaitDelay(this, m_SkillData->CastDelay);
-			m_IndicatorTask->OnFinish.AddDynamic(this, &UGA_SkillBase::PlaySkill);
-			m_IndicatorTask->ReadyForActivation();
+			FVector DestPos = UJWFunctionLibrary::ComputePositionFromMouse(Character);
+			LookAtRotation = UKismetMathLibrary::FindLookAtRotation(Character->GetActorLocation(), DestPos);
 		}
+
+		// Rectangle의 경우 스킬 범위의 절반만큼 앞으로 이동시켜서 스폰한다.
+		if(m_Indicator->GetIndicatorShape() == 0U)
+		{
+			SpawnLocation += LookAtRotation.Vector() * (m_SkillData->Range);// *0.7f);
+		}
+
+		// 앞에서 계산한 ScaleFactor 사용
+		FTransform SpawnTransform(LookAtRotation, SpawnLocation);
+		m_Indicator->FinishSpawning(SpawnTransform);
+
+		m_IndicatorTask = UAbilityTask_WaitDelay::WaitDelay(this, m_SkillData->CastTime);
+		m_IndicatorTask->OnFinish.AddDynamic(this, &UGA_SkillBase::PlaySkill);
+		m_IndicatorTask->ReadyForActivation();
+		
 	}
 	else
 	{

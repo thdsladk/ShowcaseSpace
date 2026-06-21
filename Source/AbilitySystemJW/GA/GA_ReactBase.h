@@ -62,7 +62,7 @@ protected:
 
 	// 실행할 GameplayCue들
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Cues")
-	TArray<FGameplayTag> m_GameplayCues;
+	TArray<FGameplayTag> m_GameplayCues_Effect;
 
 	UPROPERTY(EditDefaultsOnly, Category = "Ability|Config")
 	float m_Force = 100.f;

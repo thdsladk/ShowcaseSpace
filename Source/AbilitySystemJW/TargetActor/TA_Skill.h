@@ -47,4 +47,5 @@ protected:
 	float m_Range;
 	//float m_Radius;
 	FVector m_ShapeExtent;
+	bool m_SuccessSkill = true;
 };

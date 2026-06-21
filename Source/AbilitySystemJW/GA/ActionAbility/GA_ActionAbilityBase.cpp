@@ -5,7 +5,7 @@
 #include "Abilities/Tasks/AbilityTask_PlayMontageAndWait.h"
 #include "AbilitySystemComponent.h"
 #include "CharacterComponents/LinkedActionComponent.h"
-#include "Character/CharacterBase.h"
+#include "GameFramework/Character.h"
 
 #include "FunctionLibrary/JWFunctionLibrary.h"
 
@@ -31,13 +31,6 @@ void UGA_ActionAbilityBase::ActivateAbility(const FGameplayAbilitySpecHandle Han
 		m_InputID = Spec->InputID;
 	}
 
-
-	// 이부분은 자식에서 정의 되어도 될듯하다. 
-	//m_PlayMontageTask = UAbilityTask_PlayMontageAndWait::CreatePlayMontageAndWaitProxy(this, TEXT("PlayDefense"), m_DefaultMontage, 1.0f, m_SectionName);
-	//m_PlayMontageTask->OnCompleted.AddDynamic(this, &UGA_ActionAbilityBase::OnCompleteCallback_Montage);
-	//m_PlayMontageTask->OnInterrupted.AddDynamic(this, &UGA_ActionAbilityBase::OnInterruptedCallback_Montage);
-	//m_PlayMontageTask->ReadyForActivation();
-
 }
 
 void UGA_ActionAbilityBase::CancelAbility(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo, bool bReplicateCancelAbility)
@@ -62,7 +55,6 @@ void UGA_ActionAbilityBase::InputPressed(const FGameplayAbilitySpecHandle Handle
 void UGA_ActionAbilityBase::InputReleased(const FGameplayAbilitySpecHandle Handle, const FGameplayAbilityActorInfo* ActorInfo, const FGameplayAbilityActivationInfo ActivationInfo)
 {
 
-
 }
 
 void UGA_ActionAbilityBase::OnCompleteCallback_Montage()
@@ -75,8 +67,7 @@ void UGA_ActionAbilityBase::OnInterruptedCallback_Montage()
 
 void UGA_ActionAbilityBase::PlayLinkedAction()
 {
-	// (임시) 아직은 컴포넌트들을 얻어오는 인터페이스가 없어서 CharcterBase로 캐스팅 하고있다. 
-	ACharacterBase* Character = CastChecked<ACharacterBase>(GetAvatarActorFromActorInfo());
-	
-	Character->GetLinkedActionComp()->EndAction(m_InputID);
+	ACharacter* Character = CastChecked<ACharacter>(GetAvatarActorFromActorInfo());
+	ULinkedActionComponent* LinkedActionComp = Character->FindComponentByClass<ULinkedActionComponent>();
+	LinkedActionComp->EndAction(m_InputID);
 }

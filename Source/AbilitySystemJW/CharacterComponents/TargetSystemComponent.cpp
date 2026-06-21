@@ -6,7 +6,6 @@
 #include "Physics/JWCollision.h"
 #include "Interface/CollisionTeamInterface.h"
 
-
 #include "Character/CharacterBase.h"
 #include "MotionWarpingComponent.h"
 
