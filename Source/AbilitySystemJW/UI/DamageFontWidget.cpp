@@ -3,7 +3,7 @@
 #include "UI/DamageFontWidget.h"
 #include "Components/TextBlock.h"
 #include "AbilitySystemComponent.h"
-#include "Attribute/CharacterAttributeSet.h"
+#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
 #include "TimerManager.h"
 #include "Engine/World.h"
 

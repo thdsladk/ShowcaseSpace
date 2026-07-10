@@ -14,7 +14,7 @@
 * 보통은 타겟 액터가 1개 생성되지만, 여러개가 생성될 경우 0 인덱스의 타겟액터가 Default로 정의한다. 
 */
 class AActor;
-class ATA_Skill;
+class ATA_Base;
 
 UCLASS( ClassGroup=(Custom), meta=(BlueprintSpawnableComponent) )
 class ABILITYSYSTEMJW_API UTargetSystemComponent : public UActorComponent
@@ -24,7 +24,10 @@ class ABILITYSYSTEMJW_API UTargetSystemComponent : public UActorComponent
 public:	
 	// Sets default values for this component's properties
 	UTargetSystemComponent();
-
+protected:
+	// Called when the game starts
+	virtual void BeginPlay() override;
+	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 public:	
 	uint8 GetConfirmationType() const { return static_cast<uint8>(m_ConfirmationType); }
 
@@ -35,29 +38,16 @@ public:
 	void AddTargetActor(AActor* TargetActor);
 
 
-	UFUNCTION(BlueprintCallable)
-	AActor* GetTarget(int32 Index)const;
-	UFUNCTION(BlueprintCallable)
-	TArray<AActor*>  GetTargets(AActor* TargetActor)const;
-
-	FSkillTargetData& GetSkillTargetData() { return SkillTargetData; }
-	TSubclassOf<ATA_Skill> GetSkillTargetActorClass() const { return m_SkillTargetActorClass; }
-	void SetSkillTargetData(FSkillTargetData InSkillTargetData) { SkillTargetData = InSkillTargetData; }
-	void SetSkillTargetActorClass(TSubclassOf<ATA_Skill> InSkillTargetActorClass) { m_SkillTargetActorClass = InSkillTargetActorClass; }
+	FTargetData& GetCurrentTargetData() { return CurrentTargetData; }
+	TSubclassOf<ATA_Base> GetTargetActorClass() const { return m_TargetActorClass; }
+	void SetCurrentTargetData(FTargetData InTargetData) { CurrentTargetData = InTargetData; }
+	void SetTargetActorClass(TSubclassOf<ATA_Base> InTargetActorClass) { m_TargetActorClass = InTargetActorClass; }
 
 	void AddTarget(AActor* TargetActor, AActor* Target);
 
 	void StartTargeting();
 	void EndTargeting();
 
-#pragma region Calculation Function
-public:
-	bool Calculate_SingleLineTrace(const FVector Start, const FVector End, ECollisionChannel CollisionChannel, FHitResult& OutHitResult);
-	bool Calculate_SingleTrace(FJWCollisionShape CollisionShape, const FVector Start, const FVector End, ECollisionChannel CollisionChannel, FHitResult& OutHitResult);
-	bool Calculate_MultiTrace(FJWCollisionShape CollisionShape, const FVector Start, const FVector End, ECollisionChannel CollisionChannel, TArray<FHitResult>& OutHitResults);
-	bool Calculate_Radius(FJWCollisionShape CollisionShape, const FVector Start,const float Radius, ECollisionChannel CollisionChannel, TArray<FOverlapResult>& OutOverlapResults);
-
-#pragma endregion
 
 #pragma region AutoTarget System
 public:
@@ -72,23 +62,18 @@ protected:
 #pragma endregion
 
 
-protected:
-	// Called when the game starts
-	virtual void BeginPlay() override;
-	virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
 
 protected:
 	UPROPERTY(EditAnywhere, Category = "Property")
 	float m_SearchRadius;
 	float m_UpdatePeriod;
 
-	FSkillTargetData SkillTargetData;		// 현재 타겟데이터 
+	FTargetData CurrentTargetData;		// 현재 타겟데이터 
 	TEnumAsByte<EGameplayTargetingConfirmation::Type>  m_ConfirmationType;
-	TSubclassOf<ATA_Skill> m_SkillTargetActorClass;
+	TSubclassOf<ATA_Base> m_TargetActorClass;
 
 	TWeakObjectPtr<AActor> m_AutoTarget;
 	TArray<TWeakObjectPtr<AActor>> m_TargetActors;
-	TArray<TArray<TWeakObjectPtr<AActor>>> m_Targets;
 	TArray<FVector> m_TargetDestinations;
 	FTimerHandle m_UpdateTimerHandle;
 

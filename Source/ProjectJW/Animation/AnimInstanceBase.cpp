@@ -2,6 +2,7 @@
 
 
 #include "Animation/AnimInstanceBase.h"
+#include "AbilitySystemGlobals.h"
 #include "GameFramework/Character.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Interface/PlayerControllerInterface.h"
@@ -19,6 +20,21 @@ UAnimInstanceBase::UAnimInstanceBase()
 	m_CombatModeMontages.Reset(uint8(ECombatMode::End));
 }
 
+void UAnimInstanceBase::InitializeWithAbilitySystem(UAbilitySystemComponent* ASC)
+{
+	check(ASC);
+	GameplayTagPropertyMap.Initialize(this, ASC);
+}
+
+EDataValidationResult UAnimInstanceBase::IsDataValid(TArray<FText>& ValidationErrors)
+{
+	Super::IsDataValid(ValidationErrors);
+
+	GameplayTagPropertyMap.IsDataValid(this, ValidationErrors);
+
+	return ((ValidationErrors.Num() > 0) ? EDataValidationResult::Invalid : EDataValidationResult::Valid);
+}
+
 void UAnimInstanceBase::NativeInitializeAnimation()
 {
 	Super::NativeInitializeAnimation();
@@ -26,6 +42,10 @@ void UAnimInstanceBase::NativeInitializeAnimation()
 	m_Owner = Cast<ACharacter>(GetOwningActor());
 	if (m_Owner != nullptr)
 	{
+		if (UAbilitySystemComponent* ASC = UAbilitySystemGlobals::GetAbilitySystemComponentFromActor(m_Owner))
+		{
+			InitializeWithAbilitySystem(ASC);
+		}
 		m_Movement = m_Owner->GetCharacterMovement();
 	}
 }

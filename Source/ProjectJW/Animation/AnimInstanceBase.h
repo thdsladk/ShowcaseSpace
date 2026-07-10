@@ -7,11 +7,12 @@
 #include "Interface/AnimNotifyInterface.h"
 #include "Header/GlobalEnum.h"
 #include "GameplayTagContainer.h"
+#include "GameplayEffectTypes.h"
 #include "AnimInstanceBase.generated.h"
 
 class ACharacter;
 class UCharacterMovementComponent;
-
+class UAbilitySystemComponent;
 class UComboActionData;
 
 /**
@@ -25,7 +26,12 @@ class PROJECTJW_API UAnimInstanceBase : public UAnimInstance, public IAnimNotify
 
 public:
 	UAnimInstanceBase();
+	virtual void InitializeWithAbilitySystem(UAbilitySystemComponent* ASC);
+
 protected:
+#if WITH_EDITOR
+	virtual EDataValidationResult IsDataValid(TArray<FText>& ValidationErrors) override;
+#endif // WITH_EDITOR
 	virtual void NativeInitializeAnimation() override;
 	virtual void NativeUpdateAnimation(float DeltaSeconds) override;
 
@@ -142,4 +148,8 @@ protected:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Attack, Meta = (AllowPrivateAccess = "true"))
 	TArray<TObjectPtr<UComboActionData>> m_ComboActionDatas;
 
+	// Gameplay tags that can be mapped to blueprint variables. The variables will automatically update as the tags are added or removed.
+	// These should be used instead of manually querying for the gameplay tags.
+	UPROPERTY(EditDefaultsOnly, Category = "GameplayTags")
+	FGameplayTagBlueprintPropertyMap GameplayTagPropertyMap;
 };

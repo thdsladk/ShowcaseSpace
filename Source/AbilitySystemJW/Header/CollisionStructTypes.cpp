@@ -2,7 +2,7 @@
 
 void FJWCollisionShape::MakeCollisionShape()
 {
-	switch (CollisionShapeTye)
+	switch (CollisionShapeType)
 	{
 	case EJWCollisionShapeType::Sphere:
 	{

@@ -3,7 +3,7 @@
 
 #include "Character/CharacterBase.h"
 
-#include "CharacterComponents/JWMovementComponent.h"
+#include "Components/JWMovementComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "Animation/AnimInstanceBase.h"

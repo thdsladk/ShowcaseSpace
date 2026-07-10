@@ -5,7 +5,7 @@
 #include "Interface/PawnCombatInterface.h"
 #include "GenericTeamAgentInterface.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "Tag/JWGameplayTag.h"
+#include "Header/JWGameplayTag.h"
 #include "AbilitySystemComponent.h"
 
 #include "Engine/OverlapResult.h"

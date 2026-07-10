@@ -8,7 +8,8 @@
 #include "ProjectileBase.generated.h"
 
 class UProjectileMovementComponent;
-class UCapsuleComponent;
+//class UCapsuleComponent;
+class USphereComponent;
 class UGameplayEffect;
 class UUserWidget;
 
@@ -21,6 +22,7 @@ public:
 	// Sets default values for this actor's properties
 	AProjectileBase();
 	//virtual void Tick(float DeltaTime) override;
+	virtual void LifeSpanExpired() override;
 
 protected:
 	// Called when the game starts or when spawned
@@ -32,6 +34,8 @@ public:
 	// 발사 기능
 	void FireInDirection(const FVector& ShootDirection,float Power = 0.f);
 
+	UFUNCTION(BlueprintImplementableEvent, Category = "ProjectileEffect")
+	void PlayHitEffect();
 private:
 	// 충돌 처리 함수
 	UFUNCTION()
@@ -51,8 +55,10 @@ protected:
 	TObjectPtr<UProjectileMovementComponent> m_ProjectileMovement;
 
 	// 충돌 감지용 콜리전
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCapsuleComponent> m_CollisionComp;
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Components", meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<USphereComponent> m_CollisionComp;
+
+
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "Arrow", meta = (AllowPrivateAccess = "true"))
 	TObjectPtr<UStaticMeshComponent> m_MeshComp;

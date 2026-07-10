@@ -7,7 +7,7 @@
 #include "UI/SlotBaseWidget.h"
 #include "UI/GASGaugeBarUserWidget.h"
 #include "Abilities/GameplayAbilityTypes.h"
-#include "Tag/JWGameplayTag.h"
+#include "Header/JWGameplayTag.h"
 
 UGASHUD::UGASHUD()
 {

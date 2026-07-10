@@ -6,8 +6,8 @@
 #include "Components/ProgressBar.h"
 #include "Components/TextBlock.h"
 #include "AbilitySystemComponent.h"
-#include "Attribute/CharacterAttributeSet.h"
-#include "Tag/JWGameplayTag.h"
+#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
+#include "Header/JWGameplayTag.h"
 
 UGASGaugeBarUserWidget::UGASGaugeBarUserWidget()
 	:m_VisibleHP(true)

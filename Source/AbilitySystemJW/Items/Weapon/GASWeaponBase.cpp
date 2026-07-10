@@ -9,12 +9,13 @@
 #include "FunctionLibrary/JWFunctionLibrary.h"
 
 // Sets default values
-AGASWeaponBase::AGASWeaponBase()
-	: m_EquipmentType(EEquipmentType::None)
-	, m_DebugThickness(1.0f)
-	, m_DebugDuration(0.0f)
-	, m_IsDebugMode(false)
-	, m_DebugCount(0U)
+AGASWeaponBase::AGASWeaponBase() :
+	 m_EquipmentType(EEquipmentType::None),
+	 m_DebugThickness(1.0f),
+	 m_DebugDuration(0.0f),
+	 m_DebugCount(0U),
+	 m_IsDebugMode(false),
+	 m_IsAttacking(false)
 {
  	// Tick 활성화: 디버그 선을 주기적으로 그리려면 true로 설정
 	PrimaryActorTick.bCanEverTick = true;
@@ -46,7 +47,7 @@ void AGASWeaponBase::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if (m_IsDebugMode && m_WeaponCollisionBox && GetWorld())
+	if (m_IsDebugMode && m_WeaponCollisionBox && GetWorld() && m_IsAttacking)
 	{
 		// 월드 위치, 스케일된 박스 extents, 회전(quat)을 얻어 디버그 박스 그림
 		const FVector Center = m_WeaponCollisionBox->GetComponentLocation();

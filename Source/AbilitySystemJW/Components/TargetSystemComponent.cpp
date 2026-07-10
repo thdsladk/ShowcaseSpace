@@ -2,11 +2,8 @@
 
 #include "Components/TargetSystemComponent.h"
 #include "FunctionLibrary/JWFunctionLibrary.h"
-//#include "CollisionShape.h"
 #include "Physics/JWCollision.h"
 #include "Interface/CollisionTeamInterface.h"
-
-
 #include "Character/CharacterBase.h"
 #include "MotionWarpingComponent.h"
 
@@ -19,6 +16,26 @@ UTargetSystemComponent::UTargetSystemComponent() :
 	// Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these features
 	// off to improve performance if you don't need them.
 	PrimaryComponentTick.bCanEverTick = false;
+}
+
+// Called when the game starts
+void UTargetSystemComponent::BeginPlay()
+{
+	Super::BeginPlay();
+
+	//GetWorld()->GetTimerManager().SetTimer(m_UpdateTimerHandle,this,&UTargetSystemComponent::UpdateAutoTargetSystem,m_UpdatePeriod,false);
+}
+
+void UTargetSystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
+{
+	Super::EndPlay(EndPlayReason);
+
+	if (GetWorld()->GetTimerManager().IsTimerActive(m_UpdateTimerHandle) == true)
+	{
+		GetWorld()->GetTimerManager().ClearTimer(m_UpdateTimerHandle);
+	}
+
+
 }
 
 void UTargetSystemComponent::EnableAutoTargetSystem()
@@ -57,53 +74,6 @@ TArray<TWeakObjectPtr<AActor>>& UTargetSystemComponent::GetTargetActors()
 void UTargetSystemComponent::AddTargetActor(AActor* TargetActor)
 {
 	m_TargetActors.Add(TargetActor);
-	m_Targets.Add(TArray<TWeakObjectPtr<AActor>>());
-}
-
-AActor* UTargetSystemComponent::GetTarget(int32 Index) const
-{
-	if (m_Targets.IsValidIndex(Index) == true)
-	{
-		return m_Targets[Index][0].Get();
-	}
-	return nullptr;
-}
-
-TArray<AActor*> UTargetSystemComponent::GetTargets(AActor* TargetActor) const
-{
-	if (m_Targets.IsEmpty() == false)
-	{
-		int32 Index = m_TargetActors.Find(TargetActor);
-
-		if (m_Targets[Index].IsEmpty() == false)
-		{
-			TArray<AActor*> Result;
-			for (auto& Actor : m_Targets[Index])
-			{
-				Result.Add(Actor.Get());
-			}
-			return Result;
-		}
-	}
-	return TArray<AActor*>();
-}
-
-void UTargetSystemComponent::AddTarget(AActor* TargetActor ,AActor* Target)
-{
-	if (m_Targets.IsEmpty() == false)
-	{
-		int32 Index = m_TargetActors.Find(TargetActor);
-		if (m_Targets.IsValidIndex(Index) == true)
-		{
-			m_Targets[Index].Add(Target);
-		}
-	}
-	else
-	{
-		m_Targets.Add(TArray<TWeakObjectPtr<AActor>>());
-		m_Targets[0].Add(Target);
-	}
-	
 }
 
 void UTargetSystemComponent::StartTargeting()
@@ -116,69 +86,9 @@ void UTargetSystemComponent::StartTargeting()
 void UTargetSystemComponent::EndTargeting()
 {
 	// 타겟 시스템 비활성화 
-	SkillTargetData = FSkillTargetData();
+	CurrentTargetData = FTargetData();
 
 	m_IsTargeting = false;
-	m_TargetActors.Empty();
-	m_Targets.Empty();
-}
-
-bool UTargetSystemComponent::Calculate_SingleLineTrace(const FVector Start, const FVector End,ECollisionChannel CollisionChannel, FHitResult& OutHitResult)
-{
-	AActor* OwnerActor = GetOwner();
-	if (OwnerActor == nullptr) return false;
-
-	return UJWFunctionLibrary::CheckCollisionTrace_LineSingleByChannel(OwnerActor, Start, End, CollisionChannel, OutHitResult, FName("Calculate_SingleLineTrace"));
-
-}
-
-bool UTargetSystemComponent::Calculate_SingleTrace(FJWCollisionShape CollisionShape, const FVector Start, const FVector End, ECollisionChannel CollisionChannel, FHitResult& OutHitResult)
-{
-	// Trace랑 Ground Trace는 쏘는 방향을 다르게 해서 구분하는 걸로 하자. 
-	AActor* OwnerActor = GetOwner();
-	if (OwnerActor == nullptr) return false;
-
-	return UJWFunctionLibrary::CheckCollisionTrace_SweepSingleByChannel(OwnerActor, Start, End, CollisionShape.CollisionShape, CollisionChannel, OutHitResult, FName("Calculate_SingleTrace"));
-	
-}
-
-bool UTargetSystemComponent::Calculate_MultiTrace(FJWCollisionShape CollisionShape, const FVector Start, const FVector End, ECollisionChannel CollisionChannel, TArray<FHitResult>& OutHitResults)
-{
-	// Trace랑 Ground Trace는 쏘는 방향을 다르게 해서 구분하는 걸로 하자. 
-	AActor* OwnerActor = GetOwner();
-	if (OwnerActor == nullptr) return false;
-
-	return UJWFunctionLibrary::CheckCollisionTrace_SweepMultiByChannel(OwnerActor, Start, End, CollisionShape.CollisionShape, CollisionChannel, OutHitResults, FName("Calculate_MultiTrace"));
-
-}
-
-bool UTargetSystemComponent::Calculate_Radius(FJWCollisionShape CollisionShape,const FVector Start, const float Radius, ECollisionChannel CollisionChannel, TArray<FOverlapResult>& OutOverlapResults)
-{
-	// Trace랑 Ground Trace는 쏘는 방향을 다르게 해서 구분하는 걸로 하자. 
-	AActor* OwnerActor = GetOwner();
-	if (OwnerActor == nullptr) return false;
-
-	return UJWFunctionLibrary::CheckCollisionTrace_OverlapMultiByChannel(OwnerActor,Start, CollisionShape.CollisionShape, CollisionChannel, OutOverlapResults, FName("Calculate_Radius"));
-}
-
-// Called when the game starts
-void UTargetSystemComponent::BeginPlay()
-{
-	Super::BeginPlay();
-
-	//GetWorld()->GetTimerManager().SetTimer(m_UpdateTimerHandle,this,&UTargetSystemComponent::UpdateAutoTargetSystem,m_UpdatePeriod,false);
-}
-
-void UTargetSystemComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
-{
-	Super::EndPlay(EndPlayReason);
-
-	if(GetWorld()->GetTimerManager().IsTimerActive(m_UpdateTimerHandle) == true)
-	{
-		GetWorld()->GetTimerManager().ClearTimer(m_UpdateTimerHandle);
-	}
-
-
 }
 
 void UTargetSystemComponent::UpdateAutoTargetSystem()

@@ -3,8 +3,8 @@
 
 #include "Player/JWGASPlayerState.h"
 #include "AbilitySystemComponent.h"
-#include "Attribute/CharacterAttributeSet.h"
-#include "Attribute/CharacterSkillAttributeSet.h"
+#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
+#include "AbilitySystem/Attribute/CharacterSkillAttributeSet.h"
 
 AJWGASPlayerState::AJWGASPlayerState()
 {

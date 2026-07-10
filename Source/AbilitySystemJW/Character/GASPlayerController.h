@@ -3,7 +3,7 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterComponents/MyPlayerController.h"
+#include "Components/MyPlayerController.h"
 #include "GenericTeamAgentInterface.h"
 #include "GASPlayerController.generated.h"
 

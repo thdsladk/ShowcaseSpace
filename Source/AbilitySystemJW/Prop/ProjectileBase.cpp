@@ -4,13 +4,14 @@
 #include "Prop/ProjectileBase.h"
 #include "GameFramework/ProjectileMovementComponent.h"
 #include "GameFramework/Character.h"
-#include "Components/CapsuleComponent.h"
+//#include "Components/CapsuleComponent.h"
+#include "Components/SphereComponent.h"
 #include "Kismet/GameplayStatics.h"
 #include "AbilitySystemInterface.h"
 #include "AbilitySystemComponent.h"
-#include "Attribute/CharacterAttributeSet.h"
+#include "AbilitySystem/Attribute/CharacterAttributeSet.h"
 #include "AbilitySystemBlueprintLibrary.h"
-#include "Tag/JWGameplayTag.h"
+#include "Header/JWGameplayTag.h"
 #include "Interface/CollisionTeamInterface.h"
 #include "FunctionLibrary/JWFunctionLibrary.h"
 
@@ -29,9 +30,9 @@ AProjectileBase::AProjectileBase()
  	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = false;
 
-    // 충돌 캡슐
-    m_CollisionComp = CreateDefaultSubobject<UCapsuleComponent>(TEXT("ProjectileCapsuleComp"));
-    m_CollisionComp->InitCapsuleSize(5.f, 5.f * 4.f); // 반지름 5, 절반높이 20
+    // 충돌 구체
+    m_CollisionComp = CreateDefaultSubobject<USphereComponent>(TEXT("ProjectileSphereComp"));
+    m_CollisionComp->InitSphereRadius(5.f); // 반지름 5
     m_CollisionComp->SetCollisionProfileName(TEXT("Projectile"));
 	m_CollisionComp->OnComponentBeginOverlap.AddDynamic(this, &AProjectileBase::OnOverlapBegin);
    
@@ -56,6 +57,13 @@ AProjectileBase::AProjectileBase()
     InitialLifeSpan = m_LifeSeconds;
 
 
+}
+
+void AProjectileBase::LifeSpanExpired()
+{
+    Super::LifeSpanExpired();
+	
+    PlayHitEffect();
 }
 
 // Called when the game starts or when spawned
@@ -131,7 +139,8 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
             {
                 //SpecHandle.Data->SetSetByCallerMagnitude(FGameplayTag::RequestGameplayTag("Data.Charging"), m_Damage);
                 TargetASC->ApplyGameplayEffectSpecToSelf(*SpecHandle.Data.Get());
-                Debug::Print(TEXT("Ranged Hit !!!"), FColor::Orange);
+                Debug::Print(TEXT("Projectile Hit !!!"), FColor::Orange);
+                PlayHitEffect();
             }
 
 
@@ -147,6 +156,6 @@ void AProjectileBase::OnOverlapBegin(UPrimitiveComponent* OverlappedComp, AActor
         m_CollisionComp->SetCollisionEnabled(ECollisionEnabled::NoCollision);
         AttachToComponent(OtherComp, FAttachmentTransformRules::KeepWorldTransform);
 
-        SetLifeSpan(3.f);
+        SetLifeSpan(m_LifeSeconds);
     }
 }

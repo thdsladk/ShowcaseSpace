@@ -29,6 +29,8 @@ public:
 	virtual void Tick(float DeltaTime) override;
 	FORCEINLINE EEquipmentType GetEquipmentType() const{ return m_EquipmentType; }
 	UPrimitiveComponent* GetWeaponCollisionBox();
+	FORCEINLINE void AttackOn() { m_IsAttacking = true; }
+	FORCEINLINE void AttackOff() { m_IsAttacking = false; }
 
 protected:
 	UFUNCTION()
@@ -64,6 +66,8 @@ protected:
 
 
 private:
-	uint8 m_IsDebugMode : 1;
 	uint8 m_DebugCount;
+	uint8 m_IsDebugMode : 1;
+	uint8 m_IsAttacking : 1;
+
 };

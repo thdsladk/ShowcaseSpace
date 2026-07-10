@@ -6,6 +6,7 @@
 #include "Engine/DecalActor.h"
 #include "AOEBase.generated.h"
 
+class UMaterialInterface;
 /**
  * 
  */

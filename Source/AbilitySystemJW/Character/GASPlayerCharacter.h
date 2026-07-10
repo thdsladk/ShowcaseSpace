@@ -106,7 +106,6 @@ public:
 
 	virtual void PlayDamageFont(float DamageAmount, FVector HitPoint = FVector::ZeroVector)override;
 
-
 #pragma endregion
 
 #pragma region GameplayTag Function

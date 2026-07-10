@@ -33,28 +33,22 @@ public class AbilitySystemJW : ModuleRules
             "AbilitySystemJW/Interface",
             "AbilitySystemJW/Header",
             "AbilitySystemJW/Prop",
-            "AbilitySystemJW/Tag",
-            "AbilitySystemJW/GA",
-            "AbilitySystemJW/GE",
-            "AbilitySystemJW/GC",
-            "AbilitySystemJW/AbilityTask",
-            "AbilitySystemJW/TargetActor",
             "AbilitySystemJW/Animation",
             "AbilitySystemJW/Character",
-            "AbilitySystemJW/CharacterComponents",
             "AbilitySystemJW/Components",
             "AbilitySystemJW/Attribute",
             "AbilitySystemJW/UI",
-            "AbilitySystemJW/Nortify",
+            "AbilitySystemJW/Notify",
             "AbilitySystemJW/Items",
+            
+            "AbilitySystemJW/AbilitySystem",
+            "AbilitySystemJW/AbilitySystem/GA",
+            "AbilitySystemJW/AbilitySystem/GE",
+            "AbilitySystemJW/AbilitySystem/GC",
+            "AbilitySystemJW/AbilitySystem/AbilityTask",
+            "AbilitySystemJW/AbilitySystem/TargetActor",
 
-
-
-
-
-
-
-
+            "AbilitySystemJW/AI",
 
 
        });

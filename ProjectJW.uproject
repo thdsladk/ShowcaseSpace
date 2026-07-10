@@ -19,7 +19,8 @@
 			"LoadingPhase": "PostDefault",
 			"AdditionalDependencies": [
 				"GameplayAbilities",
-				"Engine"
+				"Engine",
+				"CoreUObject"
 			]
 		}
 	],

@@ -123,6 +123,15 @@ enum class ETargetType : uint8
 	End						UMETA(DisplayName = "End")
 };
 
+UENUM()
+enum class EAttributeSetType : uint8
+{
+	Character				UMETA(DisplayName = "Character"),
+	CharacterSkill			UMETA(DisplayName = "CharacterSkill"),
+	Weapon					UMETA(DisplayName = "Weapon"),
+	End						UMETA(DisplayName = "End")
+};
+
 
 // 참고 사항
 /*

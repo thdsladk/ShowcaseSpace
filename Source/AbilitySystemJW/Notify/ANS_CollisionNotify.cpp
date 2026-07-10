@@ -5,7 +5,7 @@
 #include "AbilitySystemBlueprintLibrary.h"
 #include "AbilitySystemComponent.h"
 #include "AbilitySystemInterface.h"
-#include "CharacterComponents/PawnCombatComponent.h"
+#include "Components/PawnCombatComponent.h"
 #include "Interface/PawnCombatInterface.h"
 /*
 * 여기서 CastChecked로 확인을 해서 터트리면 OwnerActor가 Pawn이 아닌 경우가 있을수 있다. 

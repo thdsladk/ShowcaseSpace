@@ -10,11 +10,14 @@ struct FJWCollisionShape
 	GENERATED_BODY()
 
 public:
+	FJWCollisionShape() :
+		CollisionShapeType(EJWCollisionShapeType::Sphere)
+	{ }
+
 	void MakeCollisionShape();
-	
 
 	UPROPERTY(EditAnywhere, Category = "Collision")
-	EJWCollisionShapeType CollisionShapeTye;
+	EJWCollisionShapeType CollisionShapeType;
 
 	UPROPERTY(EditAnywhere, Category = "Extent")
 	FVector ShapeExtent;

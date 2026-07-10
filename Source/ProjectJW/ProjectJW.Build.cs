@@ -22,7 +22,7 @@ public class ProjectJW : ModuleRules
             "ProjectJW",
             "ProjectJW/Default",
             "ProjectJW/Character",
-            "ProjectJW/CharacterComponents",
+            "ProjectJW/Components",
             //"ProjectJW/AI",
             //"ProjectJW/AI/Task",
             //"ProjectJW/AI/Service",

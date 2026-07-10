@@ -17,48 +17,46 @@ struct FPlayerWeaponData
 };
 
 USTRUCT(BlueprintType)
-struct FSkillData : public FTableRowBase
+struct FSkillDescriptionData : public FTableRowBase
 {
     GENERATED_BODY()
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite,Category ="Name")
     FName SkillName;
 
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float DefaultRange;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float DefaultAttackRate;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float DefaultEnergyCost;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float CastDelay;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    float CastTime;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
+    UPROPERTY(EditAnywhere, BlueprintReadWrite, Category = "Texture")
 
     TSoftObjectPtr<UTexture2D> Icon;
-
-    UPROPERTY(EditAnywhere, BlueprintReadWrite)
-    TSoftObjectPtr<UParticleSystem> Effect;
 };
 
 
 USTRUCT(BlueprintType)
-struct FSkillTargetData : public FTableRowBase
+struct FTargetData : public FTableRowBase
 {
 	GENERATED_BODY()
 public:
-	UPROPERTY(EditAnywhere, Category = "SkillTargetData")
+	FTargetData() :
+		TargetStartPointType(ETargetStartPointType::Character),
+		TargetType(ETargetType::Hostile),
+		TargetCount(1)
+	{
+	}
+
+
+	UPROPERTY(EditAnywhere, Category = "TargetData")
 	ETargetStartPointType TargetStartPointType;
-	UPROPERTY(EditAnywhere, Category = "SkillTargetData")
+	
+	UPROPERTY(EditAnywhere, Category = "TargetData")
 	ETargetType TargetType;
-	UPROPERTY(EditAnywhere, Category = "SkillTargetData")
+	
+	UPROPERTY(EditAnywhere, Category = "TargetData")
 	uint32 TargetCount;
-	UPROPERTY(EditAnywhere, Category = "SkillTargetData")
+
+	UPROPERTY(EditAnywhere, Category = "TargetData")
+	FVector OffsetFromActor;
+
+	UPROPERTY(EditAnywhere, Category = "TargetData")
 	FJWCollisionShape CollisionShape;
 };
+
+
