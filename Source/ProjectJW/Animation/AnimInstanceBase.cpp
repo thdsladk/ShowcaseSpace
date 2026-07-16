@@ -26,13 +26,24 @@ void UAnimInstanceBase::InitializeWithAbilitySystem(UAbilitySystemComponent* ASC
 	GameplayTagPropertyMap.Initialize(this, ASC);
 }
 
-EDataValidationResult UAnimInstanceBase::IsDataValid(TArray<FText>& ValidationErrors)
+EDataValidationResult UAnimInstanceBase::IsDataValid(FDataValidationContext& Context) const
 {
-	Super::IsDataValid(ValidationErrors);
+	// 부모 클래스 검증 먼저 실행
+	EDataValidationResult Result = Super::IsDataValid(Context);
 
-	GameplayTagPropertyMap.IsDataValid(this, ValidationErrors);
+	// GameplayTagPropertyMap 검증
+	EDataValidationResult TagResult = GameplayTagPropertyMap.IsDataValid(this,Context);
 
-	return ((ValidationErrors.Num() > 0) ? EDataValidationResult::Invalid : EDataValidationResult::Valid);
+	// 최종 결과는 두 결과 중 더 심각한 수준을 반환
+	if (Result == EDataValidationResult::Invalid || TagResult == EDataValidationResult::Invalid)
+	{
+		return EDataValidationResult::Invalid;
+	}
+	if (Result == EDataValidationResult::Valid && TagResult == EDataValidationResult::Valid)
+	{
+		return EDataValidationResult::Valid;
+	}
+	return EDataValidationResult::NotValidated;
 }
 
 void UAnimInstanceBase::NativeInitializeAnimation()

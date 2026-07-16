@@ -81,6 +81,7 @@ public:
 
 #pragma endregion
 
+#pragma region GASInput Functions
 public:
 	void GASInputPressed(int32 InputID);
 	void GASInputReleased(int32 InputID);
@@ -88,9 +89,13 @@ public:
 	void GASInputConfirm(int32 InputID);
 	void GASInputCancel(int32 InputID);
 
+#pragma endregion
+
+public:
 	UFUNCTION()
 	virtual void OnOutOfHealth();
-#pragma region Death Function
+
+#pragma region Death Functions
 protected:	
 	virtual void DeathEnded()override;
 #pragma endregion
@@ -108,7 +113,7 @@ public:
 
 #pragma endregion
 
-#pragma region GameplayTag Function
+#pragma region GameplayTag Functions
 public:
 	const FGameplayTag GetCombatModeTag() const;
 #pragma endregion
@@ -177,7 +182,9 @@ protected:
 #pragma region Weapon MeshData
 protected:
 
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment|Sockets")
 	TMap<EEquipmentSocketName, FName> m_EquipmentSocketNames;
+	UPROPERTY(EditDefaultsOnly, Category = "Equipment|Sockets")
 	TMap<EEquipmentType, FName> m_EquipmentBackSocketNames;
 
 #pragma endregion

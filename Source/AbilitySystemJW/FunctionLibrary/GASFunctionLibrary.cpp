@@ -11,8 +11,9 @@
 #include "Engine/OverlapResult.h"
 
 #include "Components/CapsuleComponent.h"
-#include "GameFramework/Character.h"
+#include "GameFramework/Pawn.h"
 #include "Game/ProjectJWGameMode.h"
+#include "MotionWarpingComponent.h"
 
 UAbilitySystemComponent* UGASFunctionLibrary::NativeGetASCFromActor(AActor* InActor)
 {

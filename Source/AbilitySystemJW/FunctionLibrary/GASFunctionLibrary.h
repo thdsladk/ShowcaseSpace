@@ -3,7 +3,8 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "Kismet/BlueprintFunctionLibrary.h"
+//#include "Kismet/BlueprintFunctionLibrary.h"
+#include "FunctionLibrary/JWFunctionLibrary.h"
 #include "GameplayTagContainer.h"
 #include "Header/GlobalEnum.h"
 #include "CollisionShape.h"
@@ -13,11 +14,13 @@ class UAbilitySystemComponent;
 class UPawnCombatComponent;
 struct FScalableFloat;
 
+using GASFL = UGASFunctionLibrary;
+
 /**
  * 
  */
 UCLASS()
-class ABILITYSYSTEMJW_API UGASFunctionLibrary : public UBlueprintFunctionLibrary
+class ABILITYSYSTEMJW_API UGASFunctionLibrary : public UJWFunctionLibrary
 {
 	GENERATED_BODY()
 public:
@@ -73,6 +76,8 @@ public:
 	static bool TryLoadSavedGameDifficulty(EGASGameDifficulty& OutSavedDifficulty);
 
 	*/
+
+
 
 
 };

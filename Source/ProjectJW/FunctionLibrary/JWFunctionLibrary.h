@@ -7,6 +7,8 @@
 #include "GameplayTagContainer.h"
 #include "JWFunctionLibrary.generated.h"
 
+using JWFL = UJWFunctionLibrary;
+
 /**
  * 
  */
@@ -58,6 +60,35 @@ public:
 	static FString GetTagSegmentAt(const FGameplayTag& GameplayTag, uint32 Index);
 	static FString GetTagSuffixString(const FGameplayTag& GameplayTag, uint32 Index);
 
+#pragma endregion
+
+
+#pragma region MotionWarping Functions
+public:
+	// ── 1계층: 프리미티브 ─────────────────────────────
+	static class UMotionWarpingComponent* GetMotionWarpingComponent(AActor* InActor);
+
+	// 액터 회전 + 컨트롤러 회전을 함께 설정 (3곳에서 반복되던 쌍)
+	UFUNCTION(BlueprintCallable, Category = "GAS|Warp")
+	static void FaceRotation(APawn* InPawn, FRotator InRotation);
+
+	// 평면(XY) 방향 벡터
+	static FVector GetPlanarDirection(const FVector& From, const FVector& To);
+
+	// 루트모션이면 워프 타겟 등록, 아니면 회전(+선택적 Launch)으로 대체하는 공통 스켈레톤.
+	// 반환값: 루트모션 경로를 탔으면 true
+	static bool WarpOrMove(
+		AActor* InActor,
+		UAnimMontage* Montage,
+		FName WarpTargetName,
+		const FVector& TargetLocation,
+		const FRotator& TargetRotation,
+		const FVector& LaunchVelocity = FVector::ZeroVector);
+
+	static void WarpKnockback(AActor* Self, const AActor* Instigator, FName WarpTargetName,
+		UAnimMontage* Montage, float Force);
+
+	static void RemoveWarpTarget(AActor* InActor, FName WarpTargetName);
 
 #pragma endregion
 

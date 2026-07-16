@@ -2,26 +2,25 @@
 
 
 #include "Character/GASPlayerCharacter.h"
-#include "AbilitySystemComponent.h"
-#include "Player/JWGASPlayerState.h"
-#include "UI/GASWidgetComponent.h"
 #include "AbilitySystem/Attribute/CharacterAttributeSet.h"
-#include "Data/DA_StartupCharacter.h"
-#include "Data/DA_StartupCharacterSkill.h"
-#include "Interface/PlayerControllerInterface.h"
-#include "Components/PlayerCombatComponent.h"
-#include "Components/TargetSystemComponent.h"
-#include "Components/PhysicsMotionSystemComponent.h"
+#include "AbilitySystemComponent.h"
 #include "Components/GASDecalComponent.h"
 #include "Components/LinkedActionComponent.h"
-#include "Items/Weapon/GASWeaponBase.h"
-#include "UI/DamageFontWidget.h"
-#include "Kismet/GameplayStatics.h"
+#include "Components/PhysicsMotionSystemComponent.h"
+#include "Components/PlayerCombatComponent.h"
+#include "Components/TargetSystemComponent.h"
+#include "Data/DA_StartupCharacter.h"
+#include "Data/DA_StartupCharacterSkill.h"
 #include "Interface/AnimNotifyInterface.h"
 #include "Interface/PlayerControllerInterface.h"
+#include "Items/Weapon/GASWeaponBase.h"
+#include "Kismet/GameplayStatics.h"
+#include "Player/JWGASPlayerState.h"
+#include "UI/DamageFontWidget.h"
+#include "UI/GASWidgetComponent.h"
 
-#include "Header\JWGameplayTag.h"
 #include "AbilitySystemBlueprintLibrary.h"
+#include "Header\JWGameplayTag.h"
 
 //#include "AbilitySystemJW.h"
 //#include "MotionWarpingComponent.h"
@@ -70,18 +69,18 @@ AGASPlayerCharacter::AGASPlayerCharacter(const FObjectInitializer& ObjectInitial
 #pragma endregion
 
 	// 소켓이름들 정의
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::HeadSocket, FName("HeadSocket"));
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::WeaponSocketL, FName("WeaponSocketL"));
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::ChestSocket, FName("ChestSocket"));
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::WeaponSocketR, FName("WeaponSocketR"));
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::FootSocketL, FName("FootSocketL"));
-	m_EquipmentSocketNames.Add(EEquipmentSocketName::FootSocketR, FName("FootSocketR"));
-
-	m_EquipmentBackSocketNames.Add(EEquipmentType::Sword, FName("BackSocket_Sword"));
-	m_EquipmentBackSocketNames.Add(EEquipmentType::Shield, FName("BackSocket_Shield"));
-	m_EquipmentBackSocketNames.Add(EEquipmentType::Bow, FName("BackSocket_Bow"));
-	m_EquipmentBackSocketNames.Add(EEquipmentType::DualBladeL, FName("BackSocket_DualBladeL"));
-	m_EquipmentBackSocketNames.Add(EEquipmentType::DualBladeR, FName("BackSocket_DualBladeR"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::HeadSocket, FName("HeadSocket"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::WeaponSocketL, FName("WeaponSocketL"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::ChestSocket, FName("ChestSocket"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::WeaponSocketR, FName("WeaponSocketR"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::FootSocketL, FName("FootSocketL"));
+	//m_EquipmentSocketNames.Add(EEquipmentSocketName::FootSocketR, FName("FootSocketR"));
+	//
+	//m_EquipmentBackSocketNames.Add(EEquipmentType::Sword, FName("BackSocket_Sword"));
+	//m_EquipmentBackSocketNames.Add(EEquipmentType::Shield, FName("BackSocket_Shield"));
+	//m_EquipmentBackSocketNames.Add(EEquipmentType::Bow, FName("BackSocket_Bow"));
+	//m_EquipmentBackSocketNames.Add(EEquipmentType::DualBladeL, FName("BackSocket_DualBladeL"));
+	//m_EquipmentBackSocketNames.Add(EEquipmentType::DualBladeR, FName("BackSocket_DualBladeR"));
 
 	
 	m_PlayerCombatComponent = CreateDefaultSubobject<UPlayerCombatComponent>(TEXT("PlayerCombatComponent"));
@@ -97,20 +96,6 @@ AGASPlayerCharacter::AGASPlayerCharacter(const FObjectInitializer& ObjectInitial
 	m_LinkedActionComponent->ComponentTags.Add(TEXT("LinkedActionComponent"));
 
 
-	//static ConstructorHelpers::FObjectFinder<USkeletalMesh> WeaponMeshRef(TEXT("/Script/Engine.SkeletalMesh'/Game/InfinityBladeWeapons/Weapons/Blunt/Blunt_Hellhammer/SK_Blunt_HellHammer.SK_Blunt_HellHammer'"));
-	//if (WeaponMeshRef.Object)
-	//{
-	//	WeaponMesh = WeaponMeshRef.Object;
-	//}
-	//
-	//WeaponRange = 75.f;
-	//WeaponAttackRate = 100.0f;
-	//
-	//static ConstructorHelpers::FObjectFinder<UAnimMontage> SKillActionMontageRef(TEXT("/Script/Engine.AnimMontage'/Game/ArenaBattleGAS/Animation/AM_SkillAttack.AM_SkillAttack'"));
-	//if (SKillActionMontageRef.Object)
-	//{
-	//	SkillActionMontage = SKillActionMontageRef.Object;
-	//}
 }
 
 UAbilitySystemComponent* AGASPlayerCharacter::GetAbilitySystemComponent() const

@@ -28,7 +28,7 @@ public class AbilitySystemJW : ModuleRules
         PrivateIncludePaths.AddRange(new string[]
        {
             "AbilitySystemJW",
-            "AbilitySystemJW/Default",
+            //"AbilitySystemJW/Default",
             "AbilitySystemJW/Data",
             "AbilitySystemJW/Interface",
             "AbilitySystemJW/Header",
@@ -36,7 +36,6 @@ public class AbilitySystemJW : ModuleRules
             "AbilitySystemJW/Animation",
             "AbilitySystemJW/Character",
             "AbilitySystemJW/Components",
-            "AbilitySystemJW/Attribute",
             "AbilitySystemJW/UI",
             "AbilitySystemJW/Notify",
             "AbilitySystemJW/Items",
@@ -45,8 +44,11 @@ public class AbilitySystemJW : ModuleRules
             "AbilitySystemJW/AbilitySystem/GA",
             "AbilitySystemJW/AbilitySystem/GE",
             "AbilitySystemJW/AbilitySystem/GC",
+            "AbilitySystemJW/AbilitySystem/Attribute",
             "AbilitySystemJW/AbilitySystem/AbilityTask",
             "AbilitySystemJW/AbilitySystem/TargetActor",
+            "AbilitySystemJW/AbilitySystem/ExecCalc",       
+
 
             "AbilitySystemJW/AI",
 
